@@ -18,6 +18,7 @@ server_scripts {
     '@oxmysql/lib/MySQL.lua',
     'server/db.lua',
     'server/main.lua',
+    'server/tuning.lua',
     'server/security.lua',
     'server/rbac.lua',
     'server/accounts.lua',

@@ -4,21 +4,27 @@ Eigenes, modulares FiveM-Framework mit **totaler Nachverfolgbarkeit**
 (Event-Sourcing der kompletten Spielwelt) und **dynamischer Spielwelt**
 (kein statischer Wert, wo ein dynamisches System möglich ist).
 
-## Status: Phase 1 — Fundament ✅
+## Status: Phase 1 — Fundament ✅ · Phase 2 — Kernsysteme ✅
 
 | Baustein | Stand |
 |---|---|
 | Docker-Infrastruktur (MariaDB, Redis, TimescaleDB, Backend, Proxy, Backups) | ✅ |
 | Log-Pipeline (Queue → Redis Streams → TimescaleDB, Disk-Buffer, Dead-Letter) | ✅ |
-| Log-Event-Katalog v1 | ✅ [docs/log-event-catalog.md](docs/log-event-catalog.md) |
+| Log-Event-Katalog | ✅ [docs/log-event-catalog.md](docs/log-event-catalog.md) |
 | Framework-Core (Sessions, Event-Security, RBAC, Geld-Basis-API) | ✅ |
 | Charaktersystem (3 Slots, Pflicht-Lebenslauf, NUI-Auswahl) | ✅ |
 | Inventar-Basis (Item-Instanzen mit UUID/Seriennummer, Item-Trace-Datenbasis) | ✅ |
 | Positions-Sampling (Bewegungs-Replay-Datenbasis, 5-s-Intervall) | ✅ |
 | Backups (täglich voll, stündlich inkrementell, Point-in-Time-Restore) | ✅ |
+| Live-Tuning/Feature-Flags (Laufzeit-änderbar, versioniert, Rollback) | ✅ |
+| Wirtschafts-Engine (dynamische Shop-Preise, Geldmengen-Aggregat) | ✅ |
+| Bank (Konten, Überweisungen, Daueraufträge) + Jobs-Grundgerüst (Lohnlauf) | ✅ |
+| Fahrzeuge (Kauf, Garagen, Schlüssel, Kraftstoff/Kilometer, Persistenz) | ✅ |
+| Smartphone-Basis (Rufnummern, Kontakte, SMS mit comms.sms) | ✅ |
+| Voice | 📋 Integrations-Guide [docs/voice.md](docs/voice.md) (SaltyChat, lizenzbedingt extern) |
 
-Folgephasen: 2 Kernsysteme (Wirtschafts-Engine, Bank, Fahrzeuge, Voice, Smartphone) ·
-3 Fraktionen (Polizei/MDT, Medic, Justiz) · 4 Dynamik (World Director, Territorien) ·
+Folgephasen: 3 Fraktionen (Polizei/MDT, Medic/Verletzungssystem, Justiz, Mechaniker) ·
+4 Dynamik (World Director, Territorien, illegale Ketten, Immobilien, Skills) ·
 5 Web (Homepage, UCP, ACP mit Timeline/Geldfluss-Graph/Session-Replay) · 6 Härtung.
 
 ## Dokumentation

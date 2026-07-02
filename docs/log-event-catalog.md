@@ -119,11 +119,47 @@ Wird vom Backend in die Tabelle `position_samples` entrollt → Bewegungs-Replay
 | `system.resource_start` / `system.resource_stop` | Ressourcen-Lifecycle | `{resource}` |
 | `system.error` | Server-seitiger Fehler | `{resource, message, stack?}` |
 
+### config.* (implementiert, Phase 2)
+| Typ | Trigger | Payload |
+|---|---|---|
+| `config.change` | Tuning-Flag geändert (ACP/Konsole) | `{key, before, after}` — Rollback = alten Wert erneut setzen |
+
+### economy.* (implementiert, Phase 2)
+| Typ | Trigger | Payload |
+|---|---|---|
+| `economy.price_tick` | Preis-Tick mit mind. einer Änderung | `{changes:[{shop, region, item, before, after, stock}]}` |
+
+### job.* (implementiert, Phase 2)
+| Typ | Trigger | Payload |
+|---|---|---|
+| `job.assign` | Job gesetzt/gewechselt | `{characterId, before?, after:{job,grade}, byAccountId?}` |
+| `job.duty` | Dienst an/aus | `{characterId, job, onDuty}` |
+| `job.payroll` | Lohnlauf abgeschlossen | `{paidCount, multiplier}` — Einzelzahlungen als money.create(state.salary) mit gleicher correlationId |
+
+### bank.* (implementiert, Phase 2 — Zahlungen selbst sind money.*)
+| Typ | Trigger | Payload |
+|---|---|---|
+| `bank.standing_order_create` | Dauerauftrag angelegt | `{orderId, toAccountNumber, amount, intervalHours}` |
+| `bank.standing_order_failed` | Ausführung gescheitert (pausiert) | `{orderId, error}` |
+
+### vehicle.* (implementiert, Phase 2 — Basis)
+| Typ | Trigger | Payload |
+|---|---|---|
+| `vehicle.buy` | Kauf beim Händler (money-korreliert) | `{vehicleId, plate, model, price, ownerId}` |
+| `vehicle.spawn` / `vehicle.store` | Garage aus-/eingeparkt | `{vehicleId, plate, garage, fuel?, mileageKm?}` |
+| `vehicle.enter` / `vehicle.exit` | Ein-/Aussteigen (server-validiert) | `{plate, seat:'driver'\|'passenger'}` |
+| `vehicle.key_grant` | Schlüsselübergabe | `{vehicleId, plate, fromCharacterId, toCharacterId}` |
+| `vehicle.refuel` | Tanken (money-Event vorgelagert) | `{vehicleId, plate, liters, cost, fuelBefore, fuelAfter}` |
+
+### comms.* (SMS implementiert, Phase 2)
+| Typ | Trigger | Payload |
+|---|---|---|
+| `comms.sms` | SMS versendet | `{fromNumber, toNumber, body}` — Inhalt voll geloggt (Katalog §2.2) |
+
 ### Reserviert für Folgephasen (Namespace fixiert, Schema folgt je Modul)
 `combat.shot`, `combat.damage`, `combat.down`, `combat.kill_file` ·
-`vehicle.enter/exit/lock/unlock/key_transfer/tune/damage/odometer` ·
-`comms.chat/sms/call_meta/tweet/ad` · `door.access` · `web.login/mutation` ·
-`economy.price_tick` · `director.event` · `law.change` · `territory.tick`
+`vehicle.lock/unlock/tune/damage` · `comms.chat/call_meta/call_content/radio/tweet/ad` ·
+`door.access` · `web.login/mutation` · `director.event` · `law.change` · `territory.tick`
 
 ## 3. Zustellgarantie
 

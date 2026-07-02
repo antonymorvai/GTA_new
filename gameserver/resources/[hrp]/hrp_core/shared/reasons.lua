@@ -23,6 +23,9 @@ HRPReasons = {
         ['bank.transfer']     = true,
         ['bank.deposit']      = true,
         ['bank.withdraw']     = true,
+        ['bank.standing_order'] = true,
+        ['vehicle.buy']       = true,   -- Senke: Fahrzeugkauf beim Händler
+        ['vehicle.fuel']      = true,   -- Senke: Tanken
     },
     item = {
         ['shop.buy']          = true,
@@ -34,6 +37,7 @@ HRPReasons = {
         ['decay.expired']     = true,
         ['admin.remove']      = true,
         ['drop.despawn']      = true,
+        ['shop.sell']         = true,   -- Verkauf an System-Shop (Item-Senke)
     },
 }
 

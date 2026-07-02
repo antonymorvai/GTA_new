@@ -109,7 +109,20 @@ GTA_new/
 | hrp_characters | Multi-Char (3 Slots), Erstellung mit Pflicht-Lebenslauf, Spawn, periodischer Save, Vitals-Grundgerüst | characters, character_vitals, character_skills | character.* |
 | hrp_inventory | Item-Definitionen, Instanzen (UUID, Seriennummer), Locations, Gewichtslimit, Lifecycle | item_definitions, item_instances, item_locations | item.* |
 | backend/ingest | Envelope-Validierung, Redis-Stream-Producer | — | — |
-| backend/logstore | Stream-Consumer, Batch-Insert, Dead-Letter, Retention-Policies | events, position_samples (Timescale) | — |
+| backend/logstore | Stream-Consumer, Batch-Insert, Dead-Letter, Retention-Policies | events, position_samples, money_flow_daily (Timescale) | — |
+
+## 5b. Modul-Übersicht Phase 2
+
+| Modul | Zweck | Tabellen | Events |
+|---|---|---|---|
+| hrp_core/tuning | Live-Tuning/Feature-Flags: Laufzeit-änderbar, versioniert, Rollback | config_flags, config_flag_history | config.change |
+| hrp_economy | Shops mit dynamischen Preisen (Angebot & Nachfrage), Preis-Tick | shops, shop_items | economy.price_tick (+ money.*/item.* korreliert) |
+| hrp_jobs | Job-Zuordnung, Grades, Dienststatus, Lohnlauf | jobs, job_grades, character_jobs | job.assign, job.duty, job.payroll |
+| hrp_banking | Kontonummern, Ein-/Auszahlung, Überweisung, Daueraufträge | bank_details, standing_orders | bank.standing_order_* (+ money.*) |
+| hrp_vehicles | Kauf, Garagen, Schlüssel, Kraftstoff/Kilometer, Persistenz | vehicle_models, vehicles, vehicle_keys | vehicle.* |
+| hrp_phone | Rufnummern, Kontakte, SMS | phone_numbers, phone_contacts, phone_messages | comms.sms |
+
+Voice (SaltyChat) wird extern integriert — siehe `docs/voice.md`.
 
 ## 6. Sicherheits-Grundlagen (Phase 1 aktiv)
 
