@@ -1,0 +1,33 @@
+# Reverse Proxy mit automatischem HTTPS (Let's Encrypt).
+# WICHTIG: /v1/ingest/* wird NICHT öffentlich geroutet — der Ingest-Endpunkt
+# ist nur über das interne Docker-Netz vom Gameserver erreichbar.
+
+{$DOMAIN} {
+	encode gzip
+
+	# Öffentliche API (UCP/ACP folgen in Phase 5)
+	handle /api/* {
+		# Ingest ist intern-only: öffentlich hart blocken (Defense in Depth)
+		@ingest path /api/v1/ingest/*
+		respond @ingest 403
+
+		uri strip_prefix /api
+		reverse_proxy backend:3001
+	}
+
+	handle /healthz {
+		reverse_proxy backend:3001
+	}
+
+	# Homepage/UCP (Phase 5) — bis dahin Platzhalter
+	handle {
+		respond "HardcoreRP – coming soon" 200
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+}

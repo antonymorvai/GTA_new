@@ -1,0 +1,28 @@
+# Environment
+.env
+*.env.local
+
+# Node
+node_modules/
+dist/
+.next/
+coverage/
+*.tsbuildinfo
+
+# FiveM
+gameserver/artifacts/
+gameserver/cache/
+gameserver/resources/**/node_modules/
+gameserver/txData/
+*.log
+
+# Logger disk buffer (runtime state, never commit)
+gameserver/resources/**/buffer/
+
+# Backups
+backups/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
