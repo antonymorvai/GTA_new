@@ -4,7 +4,7 @@ Eigenes, modulares FiveM-Framework mit **totaler Nachverfolgbarkeit**
 (Event-Sourcing der kompletten Spielwelt) und **dynamischer Spielwelt**
 (kein statischer Wert, wo ein dynamisches System möglich ist).
 
-## Status: Phase 1 — Fundament ✅ · Phase 2 — Kernsysteme ✅ · Phase 3 — Fraktionen ✅
+## Status: Phasen 1–4 ✅ (Fundament · Kernsysteme · Fraktionen · Dynamik)
 
 | Baustein | Stand |
 |---|---|
@@ -26,10 +26,17 @@ Eigenes, modulares FiveM-Framework mit **totaler Nachverfolgbarkeit**
 | Polizei (MDT-Datenbasis mit Access-Log, Strafregister, Fahndungen, Beweismittelkette) | ✅ |
 | Justiz (versioniertes Gesetzbuch, Bußgelder, Haft mit Geofence) | ✅ |
 | Mechaniker (Reparatur ohne Auto-Heal, Rechnungssystem) | ✅ |
+| Skills (XP nur durch Nutzung, Decay bei Nichtnutzung) | ✅ |
+| Dynamische Ressourcen (endliche, regenerierende Pools) | ✅ |
+| Territorien (kontinuierlicher Gang-Einfluss mit Verfall) | ✅ |
+| Illegale Kette (Anbau → Verarbeitung → rotierende Deal-Spots, Spuren) | ✅ |
+| World Director (gewichtete Zufallsereignisse, live steuerbar) | ✅ |
+| Immobilien (Kauf, Routing-Bucket-Interiors, dynamische Preise, door.access) | ✅ |
+| Firmen (Handelsregister, Firmenkonto via Geld-API, Lohnlauf) | ✅ |
 
-Folgephasen: 4 Dynamik (World Director, dynamische Ressourcen/Territorien,
-illegale Ketten, Immobilien, Firmen, Skills) · 5 Web (Homepage, UCP, ACP mit
-Timeline/Geldfluss-Graph/Session-Replay) · 6 Härtung.
+Folgephasen: 5 Web (Homepage, UCP, ACP mit Timeline/Geldfluss-Graph/
+Session-Replay/Anomalie-Queue) · 6 Härtung (Anti-Cheat, Lasttests,
+Log-Vollständigkeits-Audit, Launch-Checkliste).
 
 ## Dokumentation
 

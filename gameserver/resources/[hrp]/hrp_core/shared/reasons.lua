@@ -28,6 +28,12 @@ HRPReasons = {
         ['vehicle.fuel']      = true,   -- Senke: Tanken
         ['fine.payment']      = true,   -- Senke: Bußgeld an den Staat
         ['invoice.payment']   = true,   -- Transfer: Rechnung Spieler->Spieler (z. B. Werkstatt)
+        ['drug.sale']         = true,   -- Quelle: illegaler NPC-Verkauf (Risiko/Spuren!)
+        ['property.buy']      = true,   -- Senke: Immobilienkauf
+        ['property.sell']     = true,   -- Quelle: Verkauf an den Staat
+        ['company.deposit']   = true,   -- Transfer: Charakter -> Firmenkonto
+        ['company.withdraw']  = true,   -- Transfer: Firmenkonto -> Charakter
+        ['company.salary']    = true,   -- Transfer: Firmenkonto -> Mitarbeiter (Lohnlauf)
     },
     item = {
         ['shop.buy']          = true,
@@ -40,6 +46,9 @@ HRPReasons = {
         ['admin.remove']      = true,
         ['drop.despawn']      = true,
         ['shop.sell']         = true,   -- Verkauf an System-Shop (Item-Senke)
+        ['resource.harvest']  = true,   -- Quelle: Ressourcen-Abbau (Pool-gedeckt)
+        ['drug.process']      = true,   -- Verarbeitung (Rohware -> Produkt)
+        ['drug.sale']         = true,   -- Senke: Päckchen an NPC verkauft
     },
 }
 

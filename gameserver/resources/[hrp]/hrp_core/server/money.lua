@@ -111,6 +111,67 @@ function HRP.Money.GetBalance(characterId, account)
     return getBalance(characterId, account)
 end
 
+-- ---------------------------------------------------------------------------
+-- Firmenkonten (company_funds): gleiche Invariante, target kind 'company'.
+-- ---------------------------------------------------------------------------
+
+local function companyDelta(companyId, delta)
+    local guard = delta < 0 and (' AND balance + %d >= 0'):format(delta) or ''
+    return Db.update(
+        ('UPDATE company_funds SET balance = balance + ? WHERE company_id = ?%s'):format(guard),
+        { delta, companyId }) == 1
+end
+
+local function companyBalance(companyId)
+    return Db.scalar('SELECT balance FROM company_funds WHERE company_id = ?', { companyId })
+end
+
+--- Charakter -> Firmenkonto (reason: company.deposit) bzw. zurück (company.withdraw / company.salary).
+--- direction = 'to_company' | 'to_character'; account = 'cash'|'bank' auf Charakter-Seite.
+function HRP.Money.CompanyTransfer(characterId, companyId, account, amount, direction, reason, opts)
+    opts = opts or {}
+    if not VALID_ACCOUNTS[account] then return false, 'invalid_account' end
+    if type(amount) ~= 'number' or amount % 1 ~= 0 or amount <= 0 then return false, 'invalid_amount' end
+    if not HRPReasons.IsValid('money', reason) then return false, 'unknown_reason' end
+
+    if direction == 'to_company' then
+        if not applyDelta(characterId, account, -amount) then return false, 'insufficient_funds' end
+        if not companyDelta(companyId, amount) then
+            applyDelta(characterId, account, amount)
+            return false, 'no_company_account'
+        end
+    elseif direction == 'to_character' then
+        if not companyDelta(companyId, -amount) then return false, 'insufficient_company_funds' end
+        if not applyDelta(characterId, account, amount) then
+            companyDelta(companyId, amount)
+            return false, 'no_account'
+        end
+    else
+        return false, 'invalid_direction'
+    end
+
+    HRP.Log(findSrcByCharacter(characterId), 'money.transfer', {
+        target = { kind = 'company', id = tostring(companyId) },
+        correlationId = opts.correlationId,
+        payload = {
+            from = direction == 'to_company' and { characterId = characterId, account = account }
+                or { companyId = companyId },
+            to = direction == 'to_company' and { companyId = companyId }
+                or { characterId = characterId, account = account },
+            amount = amount, reason = reason,
+            companyBalanceAfter = companyBalance(companyId),
+        },
+    })
+    return true
+end
+
+function HRP.Money.CompanyGetBalance(companyId)
+    return companyBalance(companyId)
+end
+
+exports('MoneyCompanyTransfer', function(...) return HRP.Money.CompanyTransfer(...) end)
+exports('MoneyCompanyGetBalance', function(...) return HRP.Money.CompanyGetBalance(...) end)
+
 exports('MoneyCreate',   function(...) return HRP.Money.Create(...) end)
 exports('MoneyDestroy',  function(...) return HRP.Money.Destroy(...) end)
 exports('MoneyTransfer', function(...) return HRP.Money.Transfer(...) end)

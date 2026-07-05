@@ -20,4 +20,7 @@ done < <(find gameserver/resources -name '*.lua')
 [ "$fail" -eq 0 ] && echo "OK"
 
 echo "== Unit-Tests (pure Funktionen) =="
-"$LUA" tests/lua/pricing_test.lua
+for test in tests/lua/*_test.lua; do
+    echo "-- $test"
+    "$LUA" "$test"
+done

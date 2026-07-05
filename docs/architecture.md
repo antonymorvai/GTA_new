@@ -133,6 +133,18 @@ Voice (SaltyChat) wird extern integriert — siehe `docs/voice.md`.
 | hrp_justice | Versioniertes Gesetzbuch, Bußgelder, Haft mit Geofence | laws, law_history, fines, jail_sentences | law.change, justice.* |
 | hrp_mechanic | Reparatur (kein Auto-Heal), Rechnungen Spieler-zu-Spieler | — (nutzt vehicles) | vehicle.repair (+ money.transfer) |
 
+## 5d. Modul-Übersicht Phase 4
+
+| Modul | Zweck | Tabellen | Events |
+|---|---|---|---|
+| hrp_skills | XP nur durch Nutzung, täglicher Decay | character_skills | skill.level_up |
+| hrp_resources | Endliche, regenerierende Pools; Ertrag skaliert mit Skill | resource_pools | resource.harvest/depleted |
+| hrp_territories | Kontinuierlicher Gang-Einfluss, Verfall, Verkaufs-Modifikator | gangs, gang_members, territories, territory_influence | territory.* |
+| hrp_drugs | Kette Anbau→Verarbeitung→Verkauf, rotierende Spots, Spuren | deal_spots | drug.*, crime.trace |
+| hrp_director | Gewichtete Zufallsereignisse (Registry), live steuerbar | — | director.event |
+| hrp_properties | Kauf, Schlüssel, Routing-Bucket-Interiors, dynamische Preise | properties, property_keys | property.*, door.access |
+| hrp_companies | Handelsregister, Ränge, Firmenkonto (Core-Geld-API), Lohnlauf | companies, company_members, company_funds | company.* (+ money.transfer target company) |
+
 ## 6. Sicherheits-Grundlagen (Phase 1 aktiv)
 
 - `server.cfg`: `sv_scriptHookAllowed 0`, `sv_enforceGameBuild`, OneSync on,

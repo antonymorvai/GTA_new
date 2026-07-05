@@ -192,10 +192,53 @@ Wird vom Backend in die Tabelle `position_samples` entrollt → Bewegungs-Replay
 |---|---|---|
 | `vehicle.repair` | Werkstatt-Reparatur (kein Auto-Heal!) | `{plate, mechanicCharacterId, engineBefore, engineAfter}` |
 
+### skill.* (implementiert, Phase 4)
+| Typ | Trigger | Payload |
+|---|---|---|
+| `skill.level_up` | Level-Aufstieg durch Nutzungs-XP | `{characterId, skill, levelBefore, levelAfter, xp}` |
+
+### resource.* (implementiert, Phase 4)
+| Typ | Trigger | Payload |
+|---|---|---|
+| `resource.harvest` | Abbau/Ernte (Pool-gedeckt) | `{poolId, poolType, item, yield, poolRemaining, skillLevel}` |
+| `resource.depleted` | Ernteversuch an erschöpftem Pool | `{poolId, poolType, label}` |
+
+### territory.* (implementiert, Phase 4)
+| Typ | Trigger | Payload |
+|---|---|---|
+| `territory.influence_change` | Aktivität erhöht Einfluss | `{territoryId, gangId, activity, delta, influenceAfter}` |
+| `territory.tick` | Verfalls-Tick (Snapshot aller Einflüsse) | `{decay, influence:[...]}` |
+
+### drug.* / crime.* (implementiert, Phase 4)
+| Typ | Trigger | Payload |
+|---|---|---|
+| `drug.process` | Verarbeitung Rohware -> Produkt (item-korreliert) | `{input, output, quantity, quality, skillLevel}` |
+| `drug.sale` | NPC-Verkauf am aktiven Spot (money/item-korreliert) | `{item, quantity, quality, unitPrice, total, spotId, territoryId?, copsOnDuty, factors}` |
+| `crime.trace` | Tat hinterlässt Spur (Wahrscheinlichkeit) — Täter-ID NUR im Log-Store, in-RP muss ermittelt werden | `{crime, spotId?, hint, suspectCharacterId}` |
+
+### director.* (implementiert, Phase 4)
+| Typ | Trigger | Payload |
+|---|---|---|
+| `director.event` | World-Director-Ereignis (auch manuell via Konsole) | `{event, success, detail, manual?}` |
+
+### property.* / door.* (implementiert, Phase 4)
+| Typ | Trigger | Payload |
+|---|---|---|
+| `property.buy` | Kauf (money-korreliert) | `{propertyId, label, region, price, ownerId}` |
+| `property.key_grant` | Schlüssel übergeben | `{propertyId, fromCharacterId, toCharacterId}` |
+| `door.access` | Zutrittsversuch MIT Berechtigungsergebnis | `{propertyId, result:'granted'\|'denied', characterId}` |
+
+### company.* (implementiert, Phase 4 — Geldflüsse als money.transfer mit target kind 'company')
+| Typ | Trigger | Payload |
+|---|---|---|
+| `company.create` | Handelsregister-Eintrag | `{companyId, name, label, ownerCharacterId}` |
+| `company.hire` / `company.fire` | Personalie | `{companyId, characterId, salary?, byCharacterId}` |
+| `company.payroll_failed` | Lohnlauf ohne Deckung | `{companyId, characterId, salary, error}` |
+
 ### Reserviert für Folgephasen (Namespace fixiert, Schema folgt je Modul)
 `combat.shot` (Einzelschuss-Sampling mit Munitionstyp) · `combat.kill_file` (aggregierte Kill-Akte) ·
 `vehicle.lock/unlock/tune/damage` · `comms.chat/call_meta/call_content/radio/tweet/ad` ·
-`door.access` · `web.login/mutation` · `director.event` · `territory.tick`
+`web.login/mutation` · `law.vote` (Gesetzgebungs-Workflow der Regierung)
 
 ## 3. Zustellgarantie
 
