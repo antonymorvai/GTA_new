@@ -46,6 +46,13 @@ RegisterCommand('refuel', function()
     TriggerServerEvent('hrp:vehicles:refuel')
 end, false)
 
+RegisterCommand('trunk', function() TriggerServerEvent('hrp:vehicles:trunk', 'list') end, false)
+RegisterCommand('trunkstore', function(_, args)
+    if args[1] then TriggerServerEvent('hrp:vehicles:trunk', 'store', args[1]) end
+end, false)
+RegisterCommand('trunktake', function(_, args)
+    if args[1] then TriggerServerEvent('hrp:vehicles:trunk', 'take', args[1]) end
+end, false)
 RegisterCommand('myvehicles', function()
     TriggerServerEvent('hrp:vehicles:list')
 end, false)

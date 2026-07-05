@@ -456,6 +456,52 @@ CreateThread(function()
     end
 end)
 
+-- ---------------------------------------------------------------------------
+-- KOFFERRAUM: Container 'vehicle_trunk:<kennzeichen>' — Zugriff mit Schlüssel
+-- am aktiven Fahrzeug in Reichweite.
+-- ---------------------------------------------------------------------------
+
+Core:RegisterSecureEvent('hrp:vehicles:trunk', {
+    rate = 1, burst = 4,
+    schema = {
+        { type = 'string', maxLen = 8, pattern = '^%a+$' },
+        { type = 'string', maxLen = 36, pattern = '^[%x%-]+$', optional = true },
+    },
+}, function(src, action, uuid)
+    local ident = Core:GetPlayerIdentity(src)
+    local pos = GetEntityCoords(GetPlayerPed(src))
+
+    -- nächstes aktives Fahrzeug mit Schlüssel finden
+    local target
+    for _, state in pairs(active) do
+        if DoesEntityExist(state.entity) and #(GetEntityCoords(state.entity) - pos) < 5.0 then
+            local row = Db.single('SELECT * FROM vehicles WHERE id = ?', { state.vehicleId })
+            if row and hasKey(ident.characterId, row) then target = state break end
+        end
+    end
+    if not target then return reply(src, false, 'Kein eigenes Fahrzeug in Reichweite (Schlüssel nötig).') end
+
+    local Inv = exports.hrp_inventory
+    if action == 'list' then
+        local items = Inv:GetContainer('vehicle_trunk', target.plate) or {}
+        if #items == 0 then return reply(src, true, 'Der Kofferraum ist leer.') end
+        for _, it in ipairs(items) do
+            reply(src, true, ('%s · %s x%d'):format(it.uuid:sub(1, 8), it.label, it.quantity))
+        end
+    elseif action == 'store' and uuid then
+        local ok, err = Inv:Move(uuid, { type = 'vehicle_trunk', id = target.plate }, { srcForLog = src })
+        reply(src, ok == true, ok and 'Im Kofferraum verstaut.' or ('Fehlgeschlagen: ' .. tostring(err)))
+    elseif action == 'take' and uuid then
+        local found = false
+        for _, it in ipairs(Inv:GetContainer('vehicle_trunk', target.plate) or {}) do
+            if it.uuid == uuid then found = true break end
+        end
+        if not found then return reply(src, false, 'Liegt nicht in diesem Kofferraum.') end
+        local ok, err = Inv:Move(uuid, { type = 'character', id = ident.characterId }, { srcForLog = src })
+        reply(src, ok == true, ok and 'Entnommen.' or ('Fehlgeschlagen: ' .. tostring(err)))
+    end
+end)
+
 --- Wartung durchgeführt (hrp_mechanic): Intervall zurücksetzen.
 local function markServiced(plate)
     local affected = Db.update(

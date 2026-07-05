@@ -29,6 +29,14 @@ RegisterNetEvent('hrp:inventory:contents', function(items, weight, maxWeight)
     SendNUIMessage({ action = 'show', items = items, weight = weight, maxWeight = maxWeight })
 end)
 
+-- Übergewicht: spürbar langsamer, bis abgeladen wird
+RegisterNetEvent('hrp:inventory:overweight', function(heavy)
+    SetPedMoveRateOverride(PlayerPedId(), heavy and 0.85 or 1.0)
+    if heavy then
+        TriggerEvent('chat:addMessage', { args = { '^3INVENTAR', 'Du schleppst zu viel — du bist langsamer.' } })
+    end
+end)
+
 RegisterNUICallback('close', function(_, cb)
     closeInventory()
     cb({ ok = true })

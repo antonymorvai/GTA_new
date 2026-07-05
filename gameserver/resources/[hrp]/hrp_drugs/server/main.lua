@@ -271,6 +271,60 @@ end)
 -- Spot-Rotation (Director-Hook)
 -- ---------------------------------------------------------------------------
 
+-- ---------------------------------------------------------------------------
+-- HEHLER: kauft heiße Ware (Drogen, Dietriche, Waffen) bar mit Abschlag —
+-- Waffenverkäufe mit Seriennummer sind ein hohes Spuren-Risiko.
+-- ---------------------------------------------------------------------------
+
+local FENCE = vector3(474.9, -1310.5, 29.2)   -- Hinterhof La Mesa
+
+local FENCE_PRICES = {   -- Cent pro Stück (Basis; Tuning-Multiplikator)
+    weed_packed = 3000, lockpick = 4000, weapon_pistol = 60000, ammo_9mm = 80,
+}
+
+Core:RegisterSecureEvent('hrp:drugs:fence', {
+    rate = 0.3, burst = 2,
+    schema = { { type = 'string', maxLen = 36, pattern = '^[%x%-]+$' } },
+}, function(src, uuid)
+    if #(GetEntityCoords(GetPlayerPed(src)) - FENCE) > 10.0 then
+        return reply(src, false, 'Hier ist kein Hehler.')
+    end
+    local ident = Core:GetPlayerIdentity(src)
+
+    local item
+    for _, it in ipairs(Inv:GetContainer('character', ident.characterId) or {}) do
+        if it.uuid == uuid then item = it break end
+    end
+    if not item or not FENCE_PRICES[item.name] then
+        return reply(src, false, 'Das nimmt der Hehler nicht an.')
+    end
+
+    local multiplier = Core:TuningGet('drugs.fence_multiplier', 1.0)
+    local total = math.floor(FENCE_PRICES[item.name] * item.quantity * multiplier)
+    local serial = item.serial_number
+    local correlationId = Logger:NewCorrelationId()
+
+    local destroyed = Inv:Destroy(uuid, 'drug.sale', { correlationId = correlationId, srcForLog = src })
+    if not destroyed then return reply(src, false, 'Verkauf fehlgeschlagen.') end
+    Core:MoneyCreate(ident.characterId, 'cash', total, 'drug.sale', { correlationId = correlationId })
+
+    Core:Log(src, 'crime.fence', {
+        target = { kind = 'item', id = uuid },
+        correlationId = correlationId,
+        payload = { item = item.name, quantity = item.quantity, total = total, serialNumber = serial },
+    })
+
+    -- Waffen mit Seriennummer: hohes Spuren-Risiko
+    local traceChance = serial and 0.5 or Core:TuningGet('drugs.trace_chance_base', 0.15)
+    if math.random() < traceChance then
+        Core:Log(src, 'crime.trace', {
+            payload = { crime = 'fencing', hint = serial and ('Waffe mit SN ' .. serial .. ' im Umlauf')
+                or 'Hehlerware gesichtet', suspectCharacterId = ident.characterId },
+        })
+    end
+    reply(src, true, ('Der Hehler zahlt %s $ bar.'):format(string.format('%.2f', total / 100)))
+end)
+
 local function rotateSpots()
     local activeCount = Core:TuningGet('drugs.active_spots', 2)
     Db.update('UPDATE deal_spots SET active = 0')

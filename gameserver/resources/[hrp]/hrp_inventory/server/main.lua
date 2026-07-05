@@ -283,6 +283,44 @@ function Inventory.GetContainer(containerType, containerId)
     ]], { containerType, tostring(containerId) })
 end
 
+-- Bodendrops verfallen nach Ablauf (Despawn -> item.destroy drop.despawn)
+CreateThread(function()
+    while true do
+        Wait(300000)
+        local ttlMinutes = 30
+        pcall(function() ttlMinutes = exports.hrp_core:TuningGet('inventory.ground_despawn_minutes', 30) end)
+        local expired = Db.query([[
+            SELECT i.uuid FROM item_locations l
+            JOIN item_instances i ON i.id = l.instance_id AND i.destroyed_at IS NULL
+            WHERE l.container_type = 'ground' AND l.updated_at < DATE_SUB(NOW(3), INTERVAL ? MINUTE)
+            LIMIT 100
+        ]], { ttlMinutes }) or {}
+        for _, row in ipairs(expired) do
+            Inventory.Destroy(row.uuid, 'drop.despawn', {})
+        end
+    end
+end)
+
+-- Übergewicht: wer über dem Limit trägt, bewegt sich langsamer (Client-Flag)
+local overweight = {}
+CreateThread(function()
+    while true do
+        Wait(15000)
+        for _, srcStr in ipairs(GetPlayers()) do
+            local src = tonumber(srcStr)
+            local ok, ident = pcall(function() return exports.hrp_core:GetPlayerIdentity(src) end)
+            if ok and ident and ident.characterId then
+                local heavy = (Inventory.GetCarryWeight(ident.characterId) or 0) > MAX_CARRY_GRAMS
+                if heavy ~= (overweight[src] or false) then
+                    overweight[src] = heavy
+                    TriggerClientEvent('hrp:inventory:overweight', src, heavy)
+                end
+            end
+        end
+    end
+end)
+AddEventHandler('playerDropped', function() overweight[source] = nil end)
+
 -- HRPReasons lebt in hrp_core (shared) — hier über dessen Export gespiegelt,
 -- damit die Reason-Registry eine einzige Quelle hat.
 function HRPReasonsValid(category, code)

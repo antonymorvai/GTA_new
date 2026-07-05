@@ -154,6 +154,111 @@ Core:RegisterSecureEvent('hrp:properties:leave', { rate = 0.5, burst = 3 }, func
     end
 end)
 
+-- ---------------------------------------------------------------------------
+-- EINBRUCH: Dietrich + Skill gegen fremde Türen. Fehlschlag frisst den
+-- Dietrich, Erfolg öffnet (door.access 'breached') — mit Alarm-/Spuren-Risiko.
+-- ---------------------------------------------------------------------------
+
+Core:RegisterSecureEvent('hrp:properties:lockpick', { rate = 0.2, burst = 1 }, function(src)
+    if inside[src] then return end
+    local prop = propertyNear(src, 3.0)
+    if not prop then return reply(src, false, 'Keine Immobilie in der Nähe.') end
+    local ident = Core:GetPlayerIdentity(src)
+    if hasAccess(ident.characterId, prop) then return reply(src, false, 'Du hast doch einen Schlüssel...') end
+    if not prop.owner_id then return reply(src, false, 'Leerstehende Objekte haben nichts zu holen.') end
+
+    -- Dietrich erforderlich
+    local Inv = exports.hrp_inventory
+    local pick
+    for _, it in ipairs(Inv:GetContainer('character', ident.characterId) or {}) do
+        if it.name == 'lockpick' then pick = it break end
+    end
+    if not pick then return reply(src, false, 'Du brauchst einen Dietrich.') end
+
+    local level = 0
+    pcall(function() level = exports.hrp_skills:GetLevel(ident.characterId, 'hacking') end)
+    local chance = Core:TuningGet('properties.lockpick_base_chance', 0.35) + level * 0.05
+    local success = math.random() < math.min(chance, 0.85)
+
+    if not success then
+        Inv:Consume(pick.uuid, 1, { srcForLog = src })
+        reply(src, false, 'Der Dietrich ist abgebrochen!')
+    else
+        inside[src] = prop.id
+        SetPlayerRoutingBucket(src, BUCKET_BASE + prop.id)
+        pcall(function() exports.hrp_anticheat:AllowTeleport(src, 10000) end)
+        TriggerClientEvent('hrp:properties:teleport', src,
+            { x = INTERIOR.x, y = INTERIOR.y, z = INTERIOR.z, h = INTERIOR.w })
+        pcall(function() exports.hrp_skills:AddXp(ident.characterId, 'hacking', 25, src) end)
+        reply(src, true, 'Das Schloss gibt nach...')
+    end
+
+    Core:Log(src, 'door.access', {
+        target = { kind = 'property', id = tostring(prop.id) },
+        payload = { propertyId = prop.id, result = success and 'breached' or 'breach_failed',
+                    characterId = ident.characterId, skillLevel = level },
+    })
+
+    -- Alarm/Spuren: Chance auf crime.trace + Polizei-Dispatch
+    if math.random() < Core:TuningGet('properties.alarm_chance', 0.5) then
+        Core:Log(src, 'crime.trace', {
+            payload = { crime = 'burglary', propertyId = prop.id,
+                        hint = 'Alarmanlage ausgelöst', suspectCharacterId = ident.characterId },
+        })
+        local Jobs = exports.hrp_jobs
+        for _, srcStr in ipairs(GetPlayers()) do
+            local pSrc = tonumber(srcStr)
+            local pIdent = Core:GetPlayerIdentity(pSrc)
+            if pIdent and pIdent.characterId then
+                local ok, job = pcall(function() return Jobs:GetJob(pIdent.characterId) end)
+                if ok and job and job.name == 'police' and job.on_duty == 1 then
+                    TriggerClientEvent('chat:addMessage', pSrc, {
+                        args = { '^4DISPATCH', ('Einbruchalarm: %s'):format(prop.label) },
+                    })
+                end
+            end
+        end
+    end
+end)
+
+-- ---------------------------------------------------------------------------
+-- IMMOBILIEN-LAGER: Container 'storage:property:<id>' — Zugriff für jeden,
+-- der DRIN ist (auch Einbrecher: wer reinkommt, kommt ans Lager).
+-- ---------------------------------------------------------------------------
+
+Core:RegisterSecureEvent('hrp:properties:storage', {
+    rate = 1, burst = 4,
+    schema = {
+        { type = 'string', maxLen = 8, pattern = '^%a+$' },              -- list|store|take
+        { type = 'string', maxLen = 36, pattern = '^[%x%-]+$', optional = true },
+    },
+}, function(src, action, uuid)
+    local propId = inside[src]
+    if not propId then return reply(src, false, 'Du bist in keiner Immobilie.') end
+    local Inv = exports.hrp_inventory
+    local ident = Core:GetPlayerIdentity(src)
+    local containerId = 'property:' .. propId
+
+    if action == 'list' then
+        local items = Inv:GetContainer('storage', containerId) or {}
+        if #items == 0 then return reply(src, true, 'Das Lager ist leer.') end
+        for _, it in ipairs(items) do
+            reply(src, true, ('%s · %s x%d'):format(it.uuid:sub(1, 8), it.label, it.quantity))
+        end
+    elseif action == 'store' and uuid then
+        local ok, err = Inv:Move(uuid, { type = 'storage', id = containerId }, { srcForLog = src })
+        reply(src, ok == true, ok and 'Eingelagert.' or ('Fehlgeschlagen: ' .. tostring(err)))
+    elseif action == 'take' and uuid then
+        local found = false
+        for _, it in ipairs(Inv:GetContainer('storage', containerId) or {}) do
+            if it.uuid == uuid then found = true break end
+        end
+        if not found then return reply(src, false, 'Liegt nicht in diesem Lager.') end
+        local ok, err = Inv:Move(uuid, { type = 'character', id = ident.characterId }, { srcForLog = src })
+        reply(src, ok == true, ok and 'Entnommen.' or ('Fehlgeschlagen: ' .. tostring(err)))
+    end
+end)
+
 AddEventHandler('playerDropped', function()
     inside[source] = nil
 end)

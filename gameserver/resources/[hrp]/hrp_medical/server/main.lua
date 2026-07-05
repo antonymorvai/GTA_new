@@ -220,6 +220,18 @@ RegisterCommand('respawn', function(src)
     Db.insert('INSERT INTO medical_records (character_id, author_character_id, entry) VALUES (?, ?, ?)',
         { ident.characterId, ident.characterId, 'Einlieferung Pillbox Medical (bewusstlos aufgefunden).' })
 
+    -- Behandlungskosten (Senke -> Staatskasse); mittellose Patienten werden
+    -- trotzdem versorgt (kein Pay-to-Respawn-Lock)
+    local fee = Core:TuningGet('medical.hospital_fee', 25000)
+    local correlationId = exports.hrp_logger:NewCorrelationId()
+    local paid = Core:MoneyDestroy(ident.characterId, 'bank', fee, 'fee.service', { correlationId = correlationId })
+    if paid then
+        Core:TreasuryCredit(fee, 'fee.service', { correlationId = correlationId })
+        reply(src, true, ('Behandlungskosten: %s $ (Konto).'):format(string.format('%.2f', fee / 100)))
+    else
+        reply(src, false, 'Die Behandlungskosten konnten nicht abgebucht werden — die Klinik verzichtet.')
+    end
+
     -- Unbehandelte Verletzungen gelten nach Klinik als grundversorgt
     Db.update('UPDATE character_injuries SET treated_at = NOW(3) WHERE character_id = ? AND treated_at IS NULL',
         { ident.characterId })
