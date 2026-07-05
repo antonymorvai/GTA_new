@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import LiveStatus from '@/components/LiveStatus';
 
 const FEATURES: Array<{ title: string; text: string }> = [
   { title: 'Totale Nachverfolgbarkeit', text: 'Jede Aktion hinterlässt Spuren — Ermittlungen, Beweismittelketten und Gerichtsprozesse basieren auf echten Daten statt Behauptungen.' },
@@ -24,6 +25,7 @@ export default function Home() {
           <Link href="/register" className="btn">Jetzt bewerben</Link>
           <Link href="/regelwerk" className="btn-ghost">Regelwerk lesen</Link>
         </div>
+        <LiveStatus />
       </section>
 
       <section className="grid md:grid-cols-3 gap-4">

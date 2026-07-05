@@ -86,6 +86,24 @@ export class AcpController {
     return this.acp.replay(Number(characterId), from, to);
   }
 
+  // --- Kill-Akte ---
+  @Get('killfile/:characterId')
+  @RequirePermission('acp.logs.view')
+  async killFile(@Req() req: AuthedRequest, @Param('characterId') characterId: string,
+    @Query('at') at: string): Promise<unknown> {
+    if (!at) throw new BadRequestException('at (ISO-Zeitpunkt des Downs) erforderlich');
+    this.access(req, 'killfile', { characterId, at });
+    return this.acp.killFile(Number(characterId), at);
+  }
+
+  // --- Live-Karte ---
+  @Get('livemap')
+  @RequirePermission('acp.player.view')
+  async liveMap(@Req() req: AuthedRequest): Promise<unknown[]> {
+    this.access(req, 'livemap');
+    return this.acp.liveMap();
+  }
+
   // --- Spielerverwaltung ---
   @Get('players')
   @RequirePermission('acp.player.view')

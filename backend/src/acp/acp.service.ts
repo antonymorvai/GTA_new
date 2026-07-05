@@ -170,6 +170,66 @@ export class AcpService {
   }
 
   // -------------------------------------------------------------------------
+  // Kill-Akte: ein combat.down + kompletter Kontext (Schaden, Bewegung, 60 s)
+  // -------------------------------------------------------------------------
+
+  async killFile(characterId: number, at: string): Promise<Record<string, unknown>> {
+    const center = new Date(at);
+    const searchFrom = new Date(center.getTime() - 5 * 60000);
+    const searchTo = new Date(center.getTime() + 5 * 60000);
+
+    const down = await this.logstore.query(
+      `SELECT time, event_id, payload FROM events
+       WHERE type = 'combat.down' AND actor_character = $1 AND time BETWEEN $2 AND $3
+       ORDER BY abs(extract(epoch FROM time - $4::timestamptz)) LIMIT 1`,
+      [characterId, searchFrom, searchTo, center]);
+    if (down.rows.length === 0) throw new NotFoundException('Kein combat.down in diesem Zeitfenster.');
+
+    const downTime = new Date(down.rows[0].time);
+    const winFrom = new Date(downTime.getTime() - 60000);
+    const winTo = new Date(downTime.getTime() + 10000);
+    const killerId = (down.rows[0].payload as { killerCharacterId?: number }).killerCharacterId ?? null;
+
+    const damage = await this.logstore.query(
+      `SELECT time, actor_character, payload FROM events
+       WHERE type = 'combat.damage' AND time BETWEEN $2 AND $3
+         AND (actor_character = $1 OR (payload->>'targetCharacterId')::bigint = $1
+              ${killerId ? 'OR actor_character = $4' : ''})
+       ORDER BY time`,
+      killerId ? [characterId, winFrom, winTo, killerId] : [characterId, winFrom, winTo]);
+
+    const ids = killerId ? [characterId, killerId] : [characterId];
+    const movement = await this.logstore.query(
+      `SELECT character_id, time, x, y, z, speed FROM position_samples
+       WHERE character_id = ANY($1) AND time BETWEEN $2 AND $3 ORDER BY time`,
+      [ids, winFrom, winTo]);
+
+    return {
+      down: down.rows[0],
+      killerCharacterId: killerId,
+      damage: damage.rows,
+      movement: movement.rows,
+      window: { from: winFrom, to: winTo },
+    };
+  }
+
+  /** Letzte bekannte Positionen aller aktiven Charaktere (Live-Karte, ~5 s Versatz). */
+  async liveMap(): Promise<unknown[]> {
+    const result = await this.logstore.query(
+      `SELECT DISTINCT ON (character_id) character_id, time, x, y, z, speed
+       FROM position_samples
+       WHERE time > now() - interval '30 seconds'
+       ORDER BY character_id, time DESC`);
+    if (result.rows.length === 0) return [];
+
+    const ids = result.rows.map((r) => r.character_id);
+    const [names] = await this.db.query<RowDataPacket[]>(
+      `SELECT id, first_name, last_name FROM characters WHERE id IN (?)`, [ids]);
+    const nameMap = new Map(names.map((n) => [Number(n.id), `${n.first_name} ${n.last_name}`]));
+    return result.rows.map((r) => ({ ...r, name: nameMap.get(Number(r.character_id)) ?? '?' }));
+  }
+
+  // -------------------------------------------------------------------------
   // 360°-Spielerakte (Spiel-DB)
   // -------------------------------------------------------------------------
 

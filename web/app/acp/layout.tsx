@@ -5,9 +5,15 @@ import { usePathname } from 'next/navigation';
 
 const NAV = [
   { href: '/acp', label: 'Übersicht' },
+  { href: '/acp/livemap', label: 'Live-Karte' },
   { href: '/acp/players', label: 'Spieler' },
+  { href: '/acp/applications', label: 'Bewerbungen' },
+  { href: '/acp/tickets', label: 'Tickets' },
+  { href: '/acp/sanctions', label: 'Sanktionen' },
   { href: '/acp/logs', label: 'Log-Explorer' },
   { href: '/acp/trace', label: 'Item-Trace & Geldfluss' },
+  { href: '/acp/replay', label: 'Session-Replay' },
+  { href: '/acp/killfile', label: 'Kill-Akte' },
   { href: '/acp/anomalies', label: 'Anomalie-Queue' },
   { href: '/acp/tuning', label: 'Live-Tuning' },
 ];
