@@ -1,0 +1,31 @@
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+body { background: transparent; overflow: hidden; }
+.hidden { display: none !important; }
+
+#hud {
+    position: fixed; left: 18px; bottom: 18px;
+    width: 190px; display: flex; flex-direction: column; gap: 5px;
+}
+
+.bar-row { display: flex; align-items: center; gap: 6px; }
+.icon { font-size: 11px; width: 16px; text-align: center; filter: grayscale(0.2); }
+
+.bar {
+    flex: 1; height: 7px; border-radius: 4px;
+    background: rgba(0,0,0,0.55); overflow: hidden;
+}
+.fill { height: 100%; border-radius: 4px; transition: width 0.3s ease; }
+.fill.health { background: #ef4444; }
+.fill.armor  { background: #60a5fa; }
+.fill.hunger { background: #f59e0b; }
+.fill.thirst { background: #38bdf8; }
+.fill.fuel   { background: #a3e635; }
+
+.fill.low { animation: pulse 1s infinite; }
+@keyframes pulse { 50% { opacity: 0.4; } }
+
+#speed {
+    margin-top: 4px; color: #fff; font-size: 20px; font-weight: 700;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+}
+#speed small { font-size: 10px; font-weight: 400; color: #cbd5e1; }

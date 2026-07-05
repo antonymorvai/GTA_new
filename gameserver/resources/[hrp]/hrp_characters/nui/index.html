@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Charakterauswahl</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app" class="hidden">
+        <div class="panel">
+            <h1>Charakterauswahl</h1>
+            <div id="character-list"></div>
+            <button id="btn-new" class="btn primary">Neuen Charakter erstellen</button>
+        </div>
+
+        <div id="create-form" class="panel hidden">
+            <h1>Neuer Charakter</h1>
+            <label>Vorname <input id="firstName" maxlength="32" placeholder="Max"></label>
+            <label>Nachname <input id="lastName" maxlength="32" placeholder="Mustermann"></label>
+            <label>Geburtsdatum <input id="dateOfBirth" type="date"></label>
+            <label>Geschlecht
+                <select id="gender">
+                    <option value="m">Männlich</option>
+                    <option value="f">Weiblich</option>
+                    <option value="d">Divers</option>
+                </select>
+            </label>
+            <label>Lebenslauf (Pflicht, min. 200 Zeichen)
+                <textarea id="backstory" rows="8" placeholder="Erzähle die Geschichte deines Charakters ..."></textarea>
+                <span id="backstory-count">0 / 200</span>
+            </label>
+            <div id="form-error" class="error hidden"></div>
+            <div class="row">
+                <button id="btn-create" class="btn primary">Erstellen</button>
+                <button id="btn-cancel" class="btn">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
