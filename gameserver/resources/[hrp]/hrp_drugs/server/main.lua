@@ -196,6 +196,78 @@ Core:RegisterSecureEvent('hrp:drugs:sell', {
 end)
 
 -- ---------------------------------------------------------------------------
+-- Konsum & Sucht: Wirkung senkt Stress, Toleranz baut sich auf, Entzug
+-- erzeugt Stress. Sucht heilt nur durch lange Abstinenz (oder später Reha).
+-- ---------------------------------------------------------------------------
+
+AddEventHandler('hrp:items:used', function(src, itemName, uuid)
+    if itemName ~= 'weed_packed' then return end
+    local ident = Core:GetPlayerIdentity(src)
+
+    local addictionGain = Core:TuningGet('drugs.addiction_per_use', 5)
+    local stressRelief = Core:TuningGet('drugs.stress_relief', 30)
+
+    MySQL.update.await([[
+        INSERT INTO character_addictions (character_id, substance, level)
+        VALUES (?, 'weed', ?)
+        ON DUPLICATE KEY UPDATE level = LEAST(100, level + ?), last_consumed_at = NOW(3)
+    ]], { ident.characterId, addictionGain, addictionGain })
+    MySQL.update.await(
+        'UPDATE character_vitals SET stress = GREATEST(0, stress - ?) WHERE character_id = ?',
+        { stressRelief, ident.characterId })
+
+    local level = MySQL.scalar.await(
+        "SELECT level FROM character_addictions WHERE character_id = ? AND substance = 'weed'",
+        { ident.characterId })
+
+    Core:Log(src, 'drug.consume', {
+        target = { kind = 'character', id = tostring(ident.characterId) },
+        payload = { substance = 'weed', stressRelief = stressRelief, addictionLevel = level },
+    })
+    TriggerClientEvent('chat:addMessage', src, {
+        args = { '^2RAUSCH', level >= 60 and 'Du fühlst dich entspannt... aber du BRAUCHST das inzwischen.'
+            or 'Du fühlst dich entspannt.' },
+    })
+end)
+
+-- Entzugs-/Abbau-Tick
+CreateThread(function()
+    while true do
+        local minutes = Core:TuningGet('drugs.withdrawal_tick_minutes', 10)
+        Wait(math.max(1, minutes) * 60000)
+        local threshold = Core:TuningGet('drugs.withdrawal_threshold', 30)
+        local withdrawalHours = Core:TuningGet('drugs.withdrawal_after_hours', 2)
+        local stressPerTick = Core:TuningGet('drugs.withdrawal_stress', 6)
+
+        for _, srcStr in ipairs(GetPlayers()) do
+            local src = tonumber(srcStr)
+            local ident = Core:GetPlayerIdentity(src)
+            if ident and ident.characterId then
+                local addiction = MySQL.single.await([[
+                    SELECT level, TIMESTAMPDIFF(HOUR, last_consumed_at, NOW(3)) AS clean_hours
+                    FROM character_addictions WHERE character_id = ? AND substance = 'weed'
+                ]], { ident.characterId })
+
+                if addiction and addiction.level >= threshold and addiction.clean_hours >= withdrawalHours then
+                    -- Entzug: Stress steigt, Symptome
+                    MySQL.update.await(
+                        'UPDATE character_vitals SET stress = LEAST(100, stress + ?) WHERE character_id = ?',
+                        { stressPerTick, ident.characterId })
+                    TriggerClientEvent('chat:addMessage', src, {
+                        args = { '^1ENTZUG', 'Deine Hände zittern — du brauchst Stoff oder musst durchhalten.' },
+                    })
+                elseif addiction and addiction.level > 0 and addiction.clean_hours >= 24 then
+                    -- Langsame Heilung nach 24 h Abstinenz
+                    MySQL.update.await(
+                        "UPDATE character_addictions SET level = GREATEST(0, level - 2) WHERE character_id = ? AND substance = 'weed'",
+                        { ident.characterId })
+                end
+            end
+        end
+    end
+end)
+
+-- ---------------------------------------------------------------------------
 -- Spot-Rotation (Director-Hook)
 -- ---------------------------------------------------------------------------
 

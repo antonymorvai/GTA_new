@@ -58,6 +58,12 @@ Eigenes, modulares FiveM-Framework mit **totaler Nachverfolgbarkeit**
 | Crafting (DB-Rezepte, Skill-Freischaltung, Qualität) | ✅ |
 | Wetterfronten + synchrone Uhr (Glätte bei Regen, ACP-Override) | ✅ |
 | Fahrzeug-Verschleiß mit Wartungsintervall (/service) | ✅ |
+| Regierung: Gesetzgebung (Entwurf → Abstimmung → Inkrafttreten) + Wahlen (geheim) | ✅ |
+| Drogen-Konsum & Sucht (Toleranz, Entzug, Abstinenz-Heilung) | ✅ |
+| Crafting-Werkzeuge mit Verschleiß + Werkbank-Pflicht | ✅ |
+| Jahreszeiten (Schnee im Winter, saisonale Ernteerträge) | ✅ |
+| Kredite mit Bonität aus echten Verhaltensdaten (Raten, Ausfall) | ✅ |
+| Blitzer mit automatischem Bußgeld-Workflow | ✅ |
 
 ## Dokumentation
 

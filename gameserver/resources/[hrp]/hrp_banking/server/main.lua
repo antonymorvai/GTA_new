@@ -16,6 +16,7 @@ function Db.insert(sql, p) return MySQL.insert.await(sql, p or {}) end
 
 local Core = exports.hrp_core
 local Logger = exports.hrp_logger
+function Db.query(sql, p) return MySQL.query.await(sql, p or {}) end
 
 -- Bank-/ATM-Standorte (Basis-Set; ab Phase 4 als Map-Daten pflegbar)
 local LOCATIONS = {
@@ -135,6 +136,117 @@ Core:RegisterSecureEvent('hrp:banking:balance', { rate = 1, burst = 3 }, functio
     local cash = Core:MoneyGetBalance(ident.characterId, 'cash') or 0
     reply(src, true, ('Konto %s · Bank: %s $ · Bar: %s $')
         :format(number, string.format('%.2f', bank / 100), string.format('%.2f', cash / 100)))
+end)
+
+-- ---------------------------------------------------------------------------
+-- Kredite: Bonität aus ECHTEN Verhaltensdaten (Spielzeit, offene Bußgelder,
+-- Sanktionen). Auszahlung = money.create(loan.disbursement), Raten werden
+-- stündlich automatisch abgebucht; 24 verpasste Raten = Kreditausfall.
+-- ---------------------------------------------------------------------------
+
+local function creditLimit(characterId, accountId)
+    local playedMinutes = Db.scalar('SELECT played_minutes FROM characters WHERE id = ?', { characterId }) or 0
+    local openFines = Db.scalar(
+        "SELECT COUNT(*) FROM fines WHERE character_id = ? AND status = 'open'", { characterId }) or 0
+    local sanctions = Db.scalar(
+        'SELECT COUNT(*) FROM sanctions WHERE account_id = ?', { accountId }) or 0
+    local defaults = Db.scalar(
+        "SELECT COUNT(*) FROM loans WHERE character_id = ? AND status = 'defaulted'", { characterId }) or 0
+
+    local perHour = Core:TuningGet('banking.loan_per_played_hour', 20000)  -- Cent
+    local limit = math.floor(playedMinutes / 60) * perHour
+        - openFines * 50000 - sanctions * 200000 - defaults * 1000000
+    return math.max(0, limit), { playedMinutes = playedMinutes, openFines = openFines,
+                                 sanctions = sanctions, defaults = defaults }
+end
+
+Core:RegisterSecureEvent('hrp:banking:loanInfo', { rate = 0.5, burst = 2 }, function(src)
+    local ident = Core:GetPlayerIdentity(src)
+    local active = Db.single(
+        "SELECT id, remaining, missed FROM loans WHERE character_id = ? AND status = 'active'",
+        { ident.characterId })
+    if active then
+        return reply(src, true, ('Kredit #%d: noch %s $ offen · %d verpasste Rate(n).')
+            :format(active.id, string.format('%.2f', active.remaining / 100), active.missed))
+    end
+    local limit = creditLimit(ident.characterId, ident.accountId)
+    reply(src, true, ('Dein Kreditrahmen: %s $ (Bonität aus Spielzeit, Bußgeldern, Sanktionen).')
+        :format(string.format('%.2f', limit / 100)))
+end)
+
+Core:RegisterSecureEvent('hrp:banking:loan', {
+    rate = 0.2, burst = 1,
+    schema = { { type = 'number', integer = true, min = 10000, max = 10000000000 } },
+}, function(src, amount)
+    if not isAtBank(src) then return reply(src, false, 'Kredite gibt es nur in der Bank.') end
+    local ident = Core:GetPlayerIdentity(src)
+
+    if Db.scalar("SELECT 1 FROM loans WHERE character_id = ? AND status = 'active'", { ident.characterId }) then
+        return reply(src, false, 'Du hast bereits einen laufenden Kredit.')
+    end
+
+    local limit, score = creditLimit(ident.characterId, ident.accountId)
+    if amount > limit then
+        return reply(src, false, ('Abgelehnt — dein Kreditrahmen liegt bei %s $.')
+            :format(string.format('%.2f', limit / 100)))
+    end
+
+    local rate = Core:TuningGet('banking.loan_interest', 0.10)
+    local owed = math.floor(amount * (1 + rate))
+    local correlationId = Logger:NewCorrelationId()
+
+    local loanId = Db.insert(
+        'INSERT INTO loans (character_id, principal, remaining, interest_rate) VALUES (?, ?, ?, ?)',
+        { ident.characterId, amount, owed, rate })
+    Core:MoneyCreate(ident.characterId, 'bank', amount, 'loan.disbursement', { correlationId = correlationId })
+
+    Core:Log(src, 'bank.loan_granted', {
+        target = { kind = 'character', id = tostring(ident.characterId) },
+        correlationId = correlationId,
+        payload = { loanId = loanId, principal = amount, owed = owed, rate = rate, creditScore = score },
+    })
+    reply(src, true, ('Kredit ausgezahlt: %s $ · Rückzahlung %s $ (%.0f %% Zins), Raten stündlich automatisch.')
+        :format(string.format('%.2f', amount / 100), string.format('%.2f', owed / 100), rate * 100))
+end)
+
+-- Raten-Einzug (stündlich)
+CreateThread(function()
+    while true do
+        Wait(3600000)
+        local installmentRate = Core:TuningGet('banking.loan_installment_rate', 0.05)
+        local minInstallment = Core:TuningGet('banking.loan_min_installment', 5000)
+
+        local active = Db.query("SELECT * FROM loans WHERE status = 'active'") or {}
+        for _, loan in ipairs(active) do
+            local installment = math.min(loan.remaining,
+                math.max(minInstallment, math.floor(loan.remaining * installmentRate)))
+            local paid = Core:MoneyDestroy(loan.character_id, 'bank', installment, 'loan.repayment')
+
+            if paid then
+                local remaining = loan.remaining - installment
+                Db.update('UPDATE loans SET remaining = ?, missed = 0 WHERE id = ?', { remaining, loan.id })
+                if remaining <= 0 then
+                    Db.update("UPDATE loans SET status = 'paid', closed_at = NOW(3) WHERE id = ?", { loan.id })
+                    Logger:Log('bank.loan_paid', {
+                        target = { kind = 'character', id = tostring(loan.character_id) },
+                        payload = { loanId = loan.id },
+                    })
+                end
+            else
+                local missed = loan.missed + 1
+                if missed >= Core:TuningGet('banking.loan_default_after_missed', 24) then
+                    Db.update("UPDATE loans SET status = 'defaulted', missed = ?, closed_at = NOW(3) WHERE id = ?",
+                        { missed, loan.id })
+                    Logger:Log('bank.loan_defaulted', {
+                        target = { kind = 'character', id = tostring(loan.character_id) },
+                        payload = { loanId = loan.id, remaining = loan.remaining },
+                    })
+                else
+                    Db.update('UPDATE loans SET missed = ? WHERE id = ?', { missed, loan.id })
+                end
+            end
+        end
+    end
 end)
 
 -- ---------------------------------------------------------------------------

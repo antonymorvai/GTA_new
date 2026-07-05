@@ -30,6 +30,40 @@ local function reply(src, ok, msg)
     TriggerClientEvent('chat:addMessage', src, { args = { ok and '^2WERKBANK' or '^1WERKBANK', msg } })
 end
 
+-- Öffentliche Werkbänke (weitere folgen als Map-/Immobilien-Feature)
+local WORKBENCHES = {
+    vector3(-322.6, -134.0, 39.0),    -- LS Customs Burton
+    vector3(717.7, -1071.5, 22.2),    -- Popular Street
+    vector3(1180.3, 2640.1, 37.8),    -- Route 68
+}
+
+local function atWorkbench(src)
+    local pos = GetEntityCoords(GetPlayerPed(src))
+    for _, wb in ipairs(WORKBENCHES) do
+        if #(pos - wb) <= 5.0 then return true end
+    end
+    return false
+end
+
+--- Werkzeug prüfen + Verschleiß anwenden (Qualität = Haltbarkeit; NULL = 100).
+local function useTool(src, characterId, toolItem, wear, correlationId)
+    for _, it in ipairs(Inv:GetContainer('character', characterId) or {}) do
+        if it.name == toolItem then
+            local durability = it.quality or 100
+            local remaining = durability - wear
+            if remaining <= 0 then
+                Inv:Destroy(it.uuid, 'decay.expired', { correlationId = correlationId, srcForLog = src })
+                reply(src, false, ('Dein %s ist dabei zu Bruch gegangen!'):format(toolItem))
+            else
+                Inv:Modify(it.uuid, { quality = remaining }, 'tool.wear',
+                    { correlationId = correlationId, srcForLog = src })
+            end
+            return true
+        end
+    end
+    return false
+end
+
 RegisterCommand('rezepte', function(src)
     if src == 0 then return end
     local ident = Core:GetPlayerIdentity(src)
@@ -63,6 +97,10 @@ RegisterCommand('craft', function(src, args)
             :format(recipe.skill, recipe.min_level, level))
     end
 
+    if recipe.requires_workbench == 1 and not atWorkbench(src) then
+        return reply(src, false, 'Dafür brauchst du eine Werkbank (LS Customs Burton, Popular Street, Route 68).')
+    end
+
     local inventory = Inv:GetContainer('character', ident.characterId) or {}
     local ok, plan, missing = HRPCrafting.PlanInputs(recipe.inputs, inventory)
     if not ok then
@@ -70,6 +108,13 @@ RegisterCommand('craft', function(src, args)
     end
 
     local correlationId = Logger:NewCorrelationId()
+
+    -- Werkzeug-Pflicht + Verschleiß
+    if recipe.tool_item then
+        if not useTool(src, ident.characterId, recipe.tool_item, recipe.tool_wear, correlationId) then
+            return reply(src, false, ('Werkzeug fehlt: %s.'):format(recipe.tool_item))
+        end
+    end
 
     -- Zutaten verbrauchen (über Instanzen hinweg)
     for _, step in ipairs(plan) do

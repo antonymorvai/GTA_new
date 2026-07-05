@@ -47,11 +47,20 @@ CreateThread(function()
         Wait(math.max(1, minutes) * 60000)
 
         local override = Core:TuningGet('weather.override', '')
+        local season = Core:TuningGet('weather.season_override', '')
+        if season == '' then
+            season = HRPWeather.SeasonOf(tonumber(os.date('%j')))
+        end
+
         local nextWeather
-        if override ~= '' and HRPWeather.TRANSITIONS[override] then
+        if override ~= '' then
             nextWeather = override
         else
-            nextWeather = HRPWeather.Next(currentWeather, math.random())
+            -- Saison-Mapping rückgängig für die Zustandsmaschine (SNOW -> RAIN)
+            local logical = currentWeather
+            if logical == 'SNOWLIGHT' then logical = 'RAIN' end
+            if logical == 'BLIZZARD' then logical = 'THUNDER' end
+            nextWeather = HRPWeather.ApplySeason(HRPWeather.Next(logical, math.random()), season)
         end
 
         if nextWeather ~= currentWeather then
@@ -77,3 +86,13 @@ end)
 
 exports('GetWeather', function() return currentWeather end)
 exports('IsWet', function() return HRPWeather.IsWet(currentWeather) end)
+exports('GetSeason', function()
+    local override = Core:TuningGet('weather.season_override', '')
+    if override ~= '' then return override end
+    return HRPWeather.SeasonOf(tonumber(os.date('%j')))
+end)
+exports('SeasonFactor', function(poolType)
+    local override = Core:TuningGet('weather.season_override', '')
+    local season = override ~= '' and override or HRPWeather.SeasonOf(tonumber(os.date('%j')))
+    return HRPWeather.SeasonFactor(poolType, season)
+end)

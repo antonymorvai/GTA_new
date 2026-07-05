@@ -267,10 +267,25 @@ Wird vom Backend in die Tabelle `position_samples` entrollt → Bewegungs-Replay
 | `weather.change` | Wetterfront wechselt (Zustandsmaschine oder ACP-Override) | `{before, after, override}` |
 | `vehicle.service` | Wartung (setzt Verschleiß-Intervall zurück) | `{plate, mechanicCharacterId}` |
 
+### law.vote / election.* (implementiert — Regierung)
+| Typ | Trigger | Payload |
+|---|---|---|
+| `law.vote` | Entwurf eingebracht / namentliche Parlaments-Stimme | `{action:'proposed'\|'voted', proposalId, voteYes?, newFine?, newJailMinutes?}` — Inkrafttreten = law.change mit viaProposal |
+| `election.create` / `election.candidacy` | Wahl angesetzt / Kandidatur | `{electionId, office?, characterId?}` |
+| `election.vote` | Stimmabgabe — **bewusst OHNE Kandidat** (Wahlgeheimnis; nur Teilnahme) | `{electionId}` |
+| `election.closed` | Auszählung + automatische Amtseinführung (Governor-Job) | `{electionId, office, winnerCharacterId, votes}` |
+
+### drug.consume / bank.loan_* / vehicle.speeding (implementiert)
+| Typ | Trigger | Payload |
+|---|---|---|
+| `drug.consume` | Konsum: Stress sinkt, Sucht steigt (Entzug erzeugt Stress) | `{substance, stressRelief, addictionLevel}` |
+| `bank.loan_granted` | Kredit nach Bonitäts-Prüfung (Spielzeit, Bußgelder, Sanktionen, Ausfälle) | `{loanId, principal, owed, rate, creditScore}` — Auszahlung/Raten = money.* (loan.disbursement/repayment) |
+| `bank.loan_paid` / `bank.loan_defaulted` | Kredit getilgt / 24 Raten verpasst | `{loanId, remaining?}` |
+| `vehicle.speeding` | Blitzer ausgelöst → automatisches Bußgeld (justice.fine automated) | `{plate, cameraId, camera, kmh, limitKmh, fineId}` |
+
 ### Reserviert für Folgephasen (Namespace fixiert, Schema folgt je Modul)
 `combat.kill_file` (aggregierte Kill-Akte) ·
-`vehicle.lock/unlock/tune/damage` · `comms.chat/call_meta/call_content/radio/tweet/ad` ·
-`law.vote` (Gesetzgebungs-Workflow der Regierung)
+`vehicle.lock/unlock/tune/damage` · `comms.chat/call_meta/call_content/radio/tweet/ad`
 
 ## 3. Zustellgarantie
 

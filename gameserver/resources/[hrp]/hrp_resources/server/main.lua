@@ -98,14 +98,22 @@ Core:RegisterSecureEvent('hrp:resources:harvest', { rate = 0.3, burst = 2 }, fun
     reply(src, true, ('%dx %s — Bestand hier: %d/%d.'):format(yield, pool.item_name, pool.current, pool.capacity))
 end)
 
--- Regeneration (Intervall + Raten via Tuning/DB)
+-- Regeneration (Intervall + Raten via Tuning/DB, Jahreszeiten-Faktor)
 CreateThread(function()
     while true do
         local minutes = Core:TuningGet('resources.regen_tick_minutes', 10)
         Wait(math.max(1, minutes) * 60000)
         for _, pool in pairs(pools) do
             if pool.current < pool.capacity then
-                pool.current = math.min(pool.capacity, pool.current + pool.regen_per_tick)
+                -- Jahreszeit beeinflusst die Regeneration (Winter = magere Ernte)
+                local factor = 1.0
+                local ok, seasonal = pcall(function()
+                    return exports.hrp_weather:SeasonFactor(pool.pool_type)
+                end)
+                if ok and seasonal then factor = seasonal end
+
+                local regen = math.max(1, math.floor(pool.regen_per_tick * factor + 0.5))
+                pool.current = math.min(pool.capacity, pool.current + regen)
                 Db.update('UPDATE resource_pools SET current = ? WHERE id = ?', { pool.current, pool.id })
             end
         end

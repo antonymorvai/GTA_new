@@ -164,6 +164,25 @@ RegisterCommand('payfine', function(src, args)
     reply(src, true, ('Bußgeld #%d bezahlt (%s $).'):format(fine.id, string.format('%.2f', fine.amount / 100)))
 end, false)
 
+--- System-Bußgeld (z. B. Blitzer): kein ausstellender Beamter, automatisiert.
+local function issueSystemFine(characterId, lawCode, note)
+    local law = Db.single('SELECT code, title, fine FROM laws WHERE code = ? AND active = 1', { lawCode })
+    if not law or law.fine <= 0 then return nil end
+
+    local fineId = Db.insert(
+        'INSERT INTO fines (character_id, law_code, amount, issued_by, note) VALUES (?, ?, ?, NULL, ?)',
+        { characterId, law.code, law.fine, note or 'automatisiert' })
+
+    exports.hrp_logger:Log('justice.fine', {
+        target = { kind = 'character', id = tostring(characterId) },
+        payload = { fineId = fineId, targetCharacterId = characterId, lawCode = law.code,
+                    amount = law.fine, automated = true, note = note },
+    })
+    return fineId, law.fine
+end
+
+exports('IssueSystemFine', issueSystemFine)
+
 -- ---------------------------------------------------------------------------
 -- Haft
 -- ---------------------------------------------------------------------------

@@ -34,6 +34,13 @@ local FUEL_STATIONS = {
 local active = {}
 local byPlate = {}
 
+-- Blitzer (DB-Daten) + Auslöse-Cooldown pro Fahrzeug
+local cameras = {}
+local cameraCooldown = {}
+MySQL.ready(function()
+    cameras = Db.query('SELECT * FROM speed_cameras WHERE active = 1') or {}
+end)
+
 local function reply(src, ok, msg)
     TriggerClientEvent('chat:addMessage', src, { args = { ok and '^2FAHRZEUG' or '^1FAHRZEUG', msg } })
 end
@@ -334,14 +341,46 @@ CreateThread(function()
                         SetVehicleEngineHealth(state.entity, math.max(150.0, engine - wear))
                     end
                 end
-                -- Tankstand an den Fahrer pushen (HUD)
+                -- Tankstand an den Fahrer pushen (HUD) + Blitzer-Prüfung
                 local driverPed = GetPedInVehicleSeat(state.entity, -1)
                 if driverPed and driverPed ~= 0 then
+                    local driverSrc
                     for _, srcStr in ipairs(GetPlayers()) do
                         local pSrc = tonumber(srcStr)
-                        if GetPlayerPed(pSrc) == driverPed then
-                            TriggerClientEvent('hrp:vehicles:fuel', pSrc, state.fuel, state.tank)
-                            break
+                        if GetPlayerPed(pSrc) == driverPed then driverSrc = pSrc break end
+                    end
+                    if driverSrc then
+                        TriggerClientEvent('hrp:vehicles:fuel', driverSrc, state.fuel, state.tank)
+
+                        -- Blitzer: Geschwindigkeit über das 10-s-Fenster gemittelt
+                        local kmh = (meters / 10.0) * 3.6
+                        local tolerance = Core:TuningGet('vehicles.camera_tolerance_kmh', 10)
+                        for _, cam in ipairs(cameras) do
+                            local key = state.vehicleId .. ':' .. cam.id
+                            local onCooldown = cameraCooldown[key] and GetGameTimer() - cameraCooldown[key] < 120000
+                            if not onCooldown
+                                and #(coords - vector3(cam.pos_x, cam.pos_y, cam.pos_z)) < 40.0
+                                and kmh > cam.limit_kmh + tolerance then
+                                cameraCooldown[key] = GetGameTimer()
+                                local driver = Core:GetPlayerIdentity(driverSrc)
+                                if driver and driver.characterId then
+                                    local fineId = nil
+                                    pcall(function()
+                                        fineId = exports.hrp_justice:IssueSystemFine(driver.characterId, 'StVO-1',
+                                            ('Blitzer %s: %d km/h bei %d erlaubt (Kz. %s)')
+                                                :format(cam.label, math.floor(kmh), cam.limit_kmh, state.plate))
+                                    end)
+                                    Core:Log(driverSrc, 'vehicle.speeding', {
+                                        target = { kind = 'vehicle', id = tostring(state.vehicleId) },
+                                        payload = { plate = state.plate, cameraId = cam.id, camera = cam.label,
+                                                    kmh = math.floor(kmh), limitKmh = cam.limit_kmh, fineId = fineId },
+                                    })
+                                    TriggerClientEvent('chat:addMessage', driverSrc, {
+                                        args = { '^1BLITZER', ('Geblitzt: %d km/h bei %d erlaubt (%s). Bußgeld unter /myfines — Einspruch über die Justiz.')
+                                            :format(math.floor(kmh), cam.limit_kmh, cam.label) },
+                                    })
+                                end
+                            end
                         end
                     end
                 end

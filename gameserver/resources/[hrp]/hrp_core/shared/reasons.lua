@@ -34,6 +34,8 @@ HRPReasons = {
         ['company.deposit']   = true,   -- Transfer: Charakter -> Firmenkonto
         ['company.withdraw']  = true,   -- Transfer: Firmenkonto -> Charakter
         ['company.salary']    = true,   -- Transfer: Firmenkonto -> Mitarbeiter (Lohnlauf)
+        ['loan.disbursement'] = true,   -- Quelle: Kredit-Auszahlung der Bank
+        ['loan.repayment']    = true,   -- Senke: Kreditrate
     },
     item = {
         ['shop.buy']          = true,

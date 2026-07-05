@@ -50,3 +50,12 @@ end, false)
 RegisterCommand('duty', function()
     TriggerServerEvent('hrp:jobs:toggleDuty')
 end, false)
+
+RegisterCommand('loan', function(_, args)
+    local amount = cents(args[1])
+    if not amount then
+        TriggerServerEvent('hrp:banking:loanInfo')
+        return
+    end
+    TriggerServerEvent('hrp:banking:loan', amount)
+end, false)
