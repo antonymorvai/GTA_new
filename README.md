@@ -4,7 +4,7 @@ Eigenes, modulares FiveM-Framework mit **totaler Nachverfolgbarkeit**
 (Event-Sourcing der kompletten Spielwelt) und **dynamischer Spielwelt**
 (kein statischer Wert, wo ein dynamisches System möglich ist).
 
-## Status: Phasen 1–5 ✅ (Fundament · Kernsysteme · Fraktionen · Dynamik · Web)
+## Status: Alle 6 Phasen ✅ (Fundament · Kernsysteme · Fraktionen · Dynamik · Web · Härtung)
 
 | Baustein | Stand |
 |---|---|
@@ -41,9 +41,11 @@ Eigenes, modulares FiveM-Framework mit **totaler Nachverfolgbarkeit**
 | ACP: Anomalie-Erkennung (3 Regeln) + Prüf-Queue | ✅ |
 | ACP: Live-Tuning-Editor mit Historie (Gameserver übernimmt in 60 s) | ✅ |
 | Session-Replay-API (Bewegungsdaten je Zeitfenster) | ✅ (Kartenansicht = Ausbaustufe) |
-
-Folgephase: 6 Härtung (Anti-Cheat-Ausbau, Lasttests,
-Log-Vollständigkeits-Audit, Launch-Checkliste).
+| Anti-Cheat (Teleport/Godmode/Entity-Blacklist/Explosionen, Strike-System) | ✅ |
+| Log-Vollständigkeits-Audit (statisch, läuft in CI) | ✅ `scripts/audit-log-completeness.sh` |
+| Lasttest-Skript (2.000 Events/s-Abnahme) | ✅ `scripts/loadtest/` |
+| OpenAPI (`/api-docs`), CI (Backend/Web/Lua+Audit) | ✅ |
+| Launch-Checkliste | ✅ [docs/launch-checklist.md](docs/launch-checklist.md) |
 
 ## Dokumentation
 

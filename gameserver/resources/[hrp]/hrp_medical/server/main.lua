@@ -224,6 +224,7 @@ RegisterCommand('respawn', function(src)
     Db.update('UPDATE character_injuries SET treated_at = NOW(3) WHERE character_id = ? AND treated_at IS NULL',
         { ident.characterId })
 
+    pcall(function() exports.hrp_anticheat:AllowTeleport(src, 10000) end)
     TriggerClientEvent('hrp:medical:revive', src, true, { x = HOSPITAL.x, y = HOSPITAL.y, z = HOSPITAL.z, h = HOSPITAL.w })
 end, false)
 

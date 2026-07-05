@@ -42,6 +42,7 @@ registerAdminCommand('goto', 'game.admin.teleport', function(src, args)
     if src == 0 then return end
     local target = tonumber(args[1])
     if not target or not HRP.Players[target] then return end
+    pcall(function() exports.hrp_anticheat:AllowTeleport(src, 10000) end)
     SetEntityCoords(GetPlayerPed(src), GetEntityCoords(GetPlayerPed(target)))
 end)
 

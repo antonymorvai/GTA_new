@@ -130,6 +130,7 @@ Core:RegisterSecureEvent('hrp:properties:enter', { rate = 0.5, burst = 3 }, func
 
     inside[src] = prop.id
     SetPlayerRoutingBucket(src, BUCKET_BASE + prop.id)
+    pcall(function() exports.hrp_anticheat:AllowTeleport(src, 10000) end)
     TriggerClientEvent('hrp:properties:teleport', src,
         { x = INTERIOR.x, y = INTERIOR.y, z = INTERIOR.z, h = INTERIOR.w })
 
@@ -145,6 +146,7 @@ Core:RegisterSecureEvent('hrp:properties:leave', { rate = 0.5, burst = 3 }, func
     local prop = Db.single('SELECT * FROM properties WHERE id = ?', { propId })
     inside[src] = nil
     SetPlayerRoutingBucket(src, 0)
+    pcall(function() exports.hrp_anticheat:AllowTeleport(src, 10000) end)
     if prop then
         TriggerClientEvent('hrp:properties:teleport', src,
             { x = prop.entrance_x, y = prop.entrance_y, z = prop.entrance_z, h = 0.0 })

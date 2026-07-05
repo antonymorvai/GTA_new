@@ -142,6 +142,7 @@ RegisterNetEvent('hrp:characters:select', function(characterId)
     })
 
     local pos = char.position and json.decode(char.position) or DEFAULT_SPAWN
+    pcall(function() exports.hrp_anticheat:AllowTeleport(src, 15000) end)
     TriggerClientEvent('hrp:characters:spawn', src, pos, {
         firstName = char.first_name,
         lastName = char.last_name,

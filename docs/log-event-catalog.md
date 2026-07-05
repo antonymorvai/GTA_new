@@ -112,6 +112,7 @@ Wird vom Backend in die Tabelle `position_samples` entrollt → Bewegungs-Replay
 | `security.rate_limit` | Spieler überschreitet Event-Rate | `{eventName, allowedPerSec, observed}` |
 | `security.invalid_event` | Ungültige/abgelehnte Event-Argumente | `{eventName, violation}` |
 | `security.ban` | Ban ausgesprochen | `{banId, reason, expiresAt, byAccountId}` |
+| `security.anticheat` | Anti-Cheat-Detection (Phase 6) | `{check:'teleport'\|'health_range'\|'armor_range'\|'blacklisted_entity'\|'explosion', detail, strikes}` |
 
 ### system.* (implementiert, Basis)
 | Typ | Trigger | Payload |

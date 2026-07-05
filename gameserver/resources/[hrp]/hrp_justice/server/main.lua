@@ -171,6 +171,7 @@ local jailed = {}   -- jailed[src] = sentenceId
 
 local function jailPlayer(src, sentence)
     jailed[src] = sentence.id
+    pcall(function() exports.hrp_anticheat:AllowTeleport(src, 10000) end)
     TriggerClientEvent('hrp:justice:jail', src, { x = PRISON.x, y = PRISON.y, z = PRISON.z, h = PRISON.w })
 end
 
@@ -178,6 +179,7 @@ local function releasePlayer(src, sentenceId, releasedByCharacter, reason)
     Db.update('UPDATE jail_sentences SET released_at = NOW(3), released_by = ? WHERE id = ? AND released_at IS NULL',
         { releasedByCharacter, sentenceId })
     jailed[src] = nil
+    pcall(function() exports.hrp_anticheat:AllowTeleport(src, 10000) end)
     local ident = Core:GetPlayerIdentity(src)
     Core:Log(src, 'justice.release', {
         target = ident and { kind = 'character', id = tostring(ident.characterId) } or nil,

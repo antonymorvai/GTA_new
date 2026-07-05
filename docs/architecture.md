@@ -158,6 +158,17 @@ Voice (SaltyChat) wird extern integriert — siehe `docs/voice.md`.
 ACP-Tuning-Änderungen schreibt das Backend in `config_flags`; der Gameserver
 pollt den Stand alle 60 s (hrp_core/tuning) — Änderungen ohne Restart wirksam.
 
+## 5f. Härtung (Phase 6)
+
+| Baustein | Beschreibung |
+|---|---|
+| hrp_anticheat | Teleport-/Godmode-/Entity-/Explosions-Checks, Strike-System, `AllowTeleport`-Anmeldung legitimer Teleports; Kick-Schwelle per Tuning (Default: nur loggen) |
+| Log-Audit | `scripts/audit-log-completeness.sh`: geschützte Tabellen nur via Core-APIs beschreibbar, alle reason-Codes registriert — CI-Gate |
+| Lasttest | `scripts/loadtest/ingest-load.js`: 2.000 Events/s-Abnahme mit p95-Kriterium |
+| OpenAPI | `/api-docs` (abschaltbar via `API_DOCS=0`) |
+| CI | GitHub Actions: Backend-Build+Tests, Web-Build, Lua-Syntax+Tests+Audit |
+| Launch | `docs/launch-checklist.md` — 9 Abschnitte bis zur Whitelist-Öffnung |
+
 ## 6. Sicherheits-Grundlagen (Phase 1 aktiv)
 
 - `server.cfg`: `sv_scriptHookAllowed 0`, `sv_enforceGameBuild`, OneSync on,
