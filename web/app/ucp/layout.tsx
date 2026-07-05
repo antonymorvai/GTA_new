@@ -7,6 +7,7 @@ const TABS = [
   { href: '/ucp', label: 'Dashboard' },
   { href: '/ucp/whitelist', label: 'Whitelist-Bewerbung' },
   { href: '/ucp/tickets', label: 'Tickets & Reports' },
+  { href: '/ucp/wahlen', label: 'Wahlen & Gesetze' },
 ];
 
 export default function UcpLayout({ children }: { children: React.ReactNode }) {
