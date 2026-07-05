@@ -145,6 +145,19 @@ Voice (SaltyChat) wird extern integriert — siehe `docs/voice.md`.
 | hrp_properties | Kauf, Schlüssel, Routing-Bucket-Interiors, dynamische Preise | properties, property_keys | property.*, door.access |
 | hrp_companies | Handelsregister, Ränge, Firmenkonto (Core-Geld-API), Lohnlauf | companies, company_members, company_funds | company.* (+ money.transfer target company) |
 
+## 5e. Modul-Übersicht Phase 5 (Web)
+
+| Modul | Zweck | Events |
+|---|---|---|
+| backend/auth | Argon2id-Registrierung, Login mit TOTP-2FA, JWT, RBAC-Guard aus der Spiel-DB | web.login, web.mutation |
+| backend/ucp | Eigene Daten: Dashboard, Skills/Bußgelder, Kontoauszug (Log-Store) | — |
+| backend/acp | Log-Explorer, Timeline, Korrelation, Geldfluss (n Hops), Item-Trace, Replay-Daten, 360°-Akte, Tuning-API | admin.access (JEDER Lesezugriff), config.change |
+| backend/acp/anomaly | Regelbasierte Erkennung (Geldzuwachs, Admin-Vergaben, Drogenumsatz) + Prüf-Queue | anomaly.detected |
+| web/ | Next.js: Homepage, Login/Register, UCP, ACP-Oberflächen | — |
+
+ACP-Tuning-Änderungen schreibt das Backend in `config_flags`; der Gameserver
+pollt den Stand alle 60 s (hrp_core/tuning) — Änderungen ohne Restart wirksam.
+
 ## 6. Sicherheits-Grundlagen (Phase 1 aktiv)
 
 - `server.cfg`: `sv_scriptHookAllowed 0`, `sv_enforceGameBuild`, OneSync on,

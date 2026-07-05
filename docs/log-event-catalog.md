@@ -235,10 +235,18 @@ Wird vom Backend in die Tabelle `position_samples` entrollt → Bewegungs-Replay
 | `company.hire` / `company.fire` | Personalie | `{companyId, characterId, salary?, byCharacterId}` |
 | `company.payroll_failed` | Lohnlauf ohne Deckung | `{companyId, characterId, salary, error}` |
 
+### web.* / anomaly.* (implementiert, Phase 5 — serverId 'web')
+| Typ | Trigger | Payload |
+|---|---|---|
+| `web.login` | UCP/ACP-Login (Erfolg UND Fehlschlag) | `{success, username, reason?, ip}` |
+| `web.mutation` | Jede UCP/ACP-Mutation (Registrierung, 2FA, Anomalie-Status, …) | `{action, ...}` |
+| `admin.access` | JEDER ACP-Lesezugriff (Akte, Logs, Timeline, Replay, Tuning) | `{view, targetAccountId?, filters?, ...}` |
+| `anomaly.detected` | Anomalie-Regel schlägt an (Prüf-Queue) | `{rule, total?/count?, threshold}` |
+
 ### Reserviert für Folgephasen (Namespace fixiert, Schema folgt je Modul)
 `combat.shot` (Einzelschuss-Sampling mit Munitionstyp) · `combat.kill_file` (aggregierte Kill-Akte) ·
 `vehicle.lock/unlock/tune/damage` · `comms.chat/call_meta/call_content/radio/tweet/ad` ·
-`web.login/mutation` · `law.vote` (Gesetzgebungs-Workflow der Regierung)
+`law.vote` (Gesetzgebungs-Workflow der Regierung)
 
 ## 3. Zustellgarantie
 

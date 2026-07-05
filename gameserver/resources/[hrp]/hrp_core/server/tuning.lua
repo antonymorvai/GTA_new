@@ -25,6 +25,14 @@ end
 
 MySQL.ready(function()
     loadAll()
+    -- Periodischer Reload: übernimmt ACP-Änderungen (config_flags via Backend)
+    -- ohne Restart. Intervall bewusst kurz — die Query ist trivial.
+    CreateThread(function()
+        while true do
+            Wait(60000)
+            loadAll()
+        end
+    end)
 end)
 
 --- Wert lesen; default wird beim ersten Zugriff persistiert, damit JEDER

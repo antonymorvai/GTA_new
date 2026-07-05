@@ -19,9 +19,9 @@
 		reverse_proxy backend:3001
 	}
 
-	# Homepage/UCP (Phase 5) — bis dahin Platzhalter
+	# Homepage, UCP & ACP (Next.js)
 	handle {
-		respond "HardcoreRP – coming soon" 200
+		reverse_proxy web:3000
 	}
 
 	header {

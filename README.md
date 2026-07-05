@@ -4,7 +4,7 @@ Eigenes, modulares FiveM-Framework mit **totaler Nachverfolgbarkeit**
 (Event-Sourcing der kompletten Spielwelt) und **dynamischer Spielwelt**
 (kein statischer Wert, wo ein dynamisches System möglich ist).
 
-## Status: Phasen 1–4 ✅ (Fundament · Kernsysteme · Fraktionen · Dynamik)
+## Status: Phasen 1–5 ✅ (Fundament · Kernsysteme · Fraktionen · Dynamik · Web)
 
 | Baustein | Stand |
 |---|---|
@@ -33,9 +33,16 @@ Eigenes, modulares FiveM-Framework mit **totaler Nachverfolgbarkeit**
 | World Director (gewichtete Zufallsereignisse, live steuerbar) | ✅ |
 | Immobilien (Kauf, Routing-Bucket-Interiors, dynamische Preise, door.access) | ✅ |
 | Firmen (Handelsregister, Firmenkonto via Geld-API, Lohnlauf) | ✅ |
+| Web-Auth (Argon2id, TOTP-2FA, JWT, web.login-Events) | ✅ |
+| Homepage (Next.js, Regelwerk, Impressum/Datenschutz) | ✅ |
+| UCP (Dashboard, Charaktere, Kontoauszug aus dem Log-Store) | ✅ |
+| ACP: Log-Explorer, Universal-Timeline, Korrelations-Drill-Down | ✅ |
+| ACP: 360°-Spielerakte, Item-Trace, Geldfluss-Analyse (n Hops) | ✅ |
+| ACP: Anomalie-Erkennung (3 Regeln) + Prüf-Queue | ✅ |
+| ACP: Live-Tuning-Editor mit Historie (Gameserver übernimmt in 60 s) | ✅ |
+| Session-Replay-API (Bewegungsdaten je Zeitfenster) | ✅ (Kartenansicht = Ausbaustufe) |
 
-Folgephasen: 5 Web (Homepage, UCP, ACP mit Timeline/Geldfluss-Graph/
-Session-Replay/Anomalie-Queue) · 6 Härtung (Anti-Cheat, Lasttests,
+Folgephase: 6 Härtung (Anti-Cheat-Ausbau, Lasttests,
 Log-Vollständigkeits-Audit, Launch-Checkliste).
 
 ## Dokumentation

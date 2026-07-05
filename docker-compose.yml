@@ -87,6 +87,7 @@ services:
       LOGSTORE_URL: postgres://${LOGSTORE_USER}:${LOGSTORE_PASSWORD}@logstore:5432/${LOGSTORE_DB}
       GAMEDB_URL: mysql://${MARIADB_USER}:${MARIADB_PASSWORD}@mariadb:3306/${MARIADB_DATABASE}
       INGEST_TOKEN: ${INGEST_TOKEN}
+      JWT_SECRET: ${JWT_SECRET}
       LOG_RETENTION_DAYS: ${LOG_RETENTION_DAYS}
       POSITION_RETENTION_DAYS: ${POSITION_RETENTION_DAYS}
       TZ: ${TZ}
@@ -95,6 +96,15 @@ services:
       logstore: { condition: service_healthy }
       mariadb: { condition: service_healthy }
     networks: [internal, edge]
+
+  web:
+    build: ./web
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      TZ: ${TZ}
+    depends_on: [backend]
+    networks: [edge]
 
   proxy:
     image: caddy:2
@@ -108,7 +118,7 @@ services:
       - ./proxy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
     networks: [edge]
-    depends_on: [backend]
+    depends_on: [backend, web]
 
   fivem:
     build: ./gameserver
