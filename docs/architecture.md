@@ -124,6 +124,15 @@ GTA_new/
 
 Voice (SaltyChat) wird extern integriert — siehe `docs/voice.md`.
 
+## 5c. Modul-Übersicht Phase 3
+
+| Modul | Zweck | Tabellen | Events |
+|---|---|---|---|
+| hrp_medical | Verletzungen je Trefferzone, Down/Revive, Krankenakten, Vitals-Simulation | character_injuries, medical_records | combat.damage, combat.down, medical.*, character.state_change |
+| hrp_police | MDT-Datenbasis (Access-Log!), Strafregister, Fahndungen, Beweismittelkette | criminal_records, warrants, evidence_cases, evidence_log | police.*, evidence.* |
+| hrp_justice | Versioniertes Gesetzbuch, Bußgelder, Haft mit Geofence | laws, law_history, fines, jail_sentences | law.change, justice.* |
+| hrp_mechanic | Reparatur (kein Auto-Heal), Rechnungen Spieler-zu-Spieler | — (nutzt vehicles) | vehicle.repair (+ money.transfer) |
+
 ## 6. Sicherheits-Grundlagen (Phase 1 aktiv)
 
 - `server.cfg`: `sv_scriptHookAllowed 0`, `sv_enforceGameBuild`, OneSync on,

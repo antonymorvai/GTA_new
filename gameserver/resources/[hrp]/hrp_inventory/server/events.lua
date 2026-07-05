@@ -50,6 +50,32 @@ Core:RegisterSecureEvent('hrp:inventory:drop', {
     Inventory.Move(uuid, { type = 'ground', id = groundId }, { srcForLog = src })
 end)
 
+-- Item benutzen: konsumiert 1 Einheit und meldet die Nutzung an Effekt-Module
+-- (z. B. hrp_medical für Essen/Trinken/Verbände) über das Server-Event
+-- 'hrp:items:used' (src, itemName, uuid).
+Core:RegisterSecureEvent('hrp:inventory:use', {
+    rate = 1, burst = 3,
+    schema = { { type = 'string', maxLen = 36, pattern = '^[%x%-]+$' } },
+}, function(src, uuid)
+    local ident = Core:GetPlayerIdentity(src)
+    local instance
+    for _, it in ipairs(Inventory.GetContainer('character', ident.characterId) or {}) do
+        if it.uuid == uuid then instance = it break end
+    end
+    if not instance then return end
+
+    local def = Inventory.GetDefinition(instance.name)
+    if not def or def.usable ~= 1 then
+        TriggerClientEvent('chat:addMessage', src, { args = { '^1INVENTAR', 'Dieses Item ist nicht benutzbar.' } })
+        return
+    end
+
+    local ok = Inventory.Consume(uuid, 1, { srcForLog = src })
+    if ok then
+        TriggerEvent('hrp:items:used', src, instance.name, uuid)
+    end
+end)
+
 -- /giveitem <serverId> <itemName> <menge> — Admin, RBAC-geprüft + doppelt geloggt
 RegisterCommand('giveitem', function(src, args)
     if src ~= 0 and not Core:HasPermission(src, 'game.admin.item_give') then

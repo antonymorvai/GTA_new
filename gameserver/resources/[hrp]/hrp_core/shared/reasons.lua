@@ -26,6 +26,8 @@ HRPReasons = {
         ['bank.standing_order'] = true,
         ['vehicle.buy']       = true,   -- Senke: Fahrzeugkauf beim Händler
         ['vehicle.fuel']      = true,   -- Senke: Tanken
+        ['fine.payment']      = true,   -- Senke: Bußgeld an den Staat
+        ['invoice.payment']   = true,   -- Transfer: Rechnung Spieler->Spieler (z. B. Werkstatt)
     },
     item = {
         ['shop.buy']          = true,

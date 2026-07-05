@@ -156,10 +156,46 @@ Wird vom Backend in die Tabelle `position_samples` entrollt → Bewegungs-Replay
 |---|---|---|
 | `comms.sms` | SMS versendet | `{fromNumber, toNumber, body}` — Inhalt voll geloggt (Katalog §2.2) |
 
+### combat.* (implementiert, Phase 3)
+| Typ | Trigger | Payload |
+|---|---|---|
+| `combat.damage` | Jeder Waffenschaden (weaponDamageEvent, server-seitig) | `{weaponHash, damage, zone, hitComponent, distance, targetCharacterId?, targetType}` |
+| `combat.down` | Spieler bewusstlos/tot | `{characterId, cause, weaponHash?, killerCharacterId?, killerAccountId?, bleedOutSeconds}` — Kill-Akte = dieses Event + position_samples der letzten 60 s |
+
+### medical.* (implementiert, Phase 3)
+| Typ | Trigger | Payload |
+|---|---|---|
+| `medical.revive` / `medical.treat` / `medical.diagnose` | EMS-Aktionen (Diagnose = Akteneinsicht, wird geloggt!) | `{patientCharacterId, medicCharacterId, injuriesTreated?}` |
+
+### police.* (implementiert, Phase 3)
+| Typ | Trigger | Payload |
+|---|---|---|
+| `police.mdt_access` | JEDER MDT-Zugriff, auch reines Nachschlagen | `{view:'person'\|'vehicle'\|'evidence'\|'weapon_serial', officerCharacterId, targetCharacterId?, query}` |
+| `police.charge` | Strafregister-Eintrag | `{targetCharacterId, lawCode, officerCharacterId, note}` |
+| `police.warrant` | Fahndung ausgeschrieben/geschlossen | `{warrantId, targetCharacterId?, reason?, status, issuedByCharacterId?/closedByCharacterId?}` |
+
+### evidence.* (implementiert, Phase 3 — Chain of Custody)
+| Typ | Trigger | Payload |
+|---|---|---|
+| `evidence.case_open` | Fall angelegt | `{caseNumber, title, byCharacterId}` |
+| `evidence.custody` | Ein-/Auslagerung von Beweismitteln (zusätzlich zu item.move) | `{caseNumber, itemUuid, action:'stored'\|'checked_out'\|'returned', byCharacterId, note}` |
+
+### law.* / justice.* (implementiert, Phase 3)
+| Typ | Trigger | Payload |
+|---|---|---|
+| `law.change` | Gesetz geändert (Version-Bump + Snapshot in law_history) | `{code, version, before:{fine,jailMinutes}, after:{...}, changedByCharacterId}` |
+| `justice.fine` / `justice.fine_paid` | Bußgeld ausgestellt / bezahlt (Zahlung = money.destroy(fine.payment), korreliert) | `{fineId, lawCode, amount, targetCharacterId?, issuedByCharacterId?}` |
+| `justice.jail` / `justice.release` | Haft angetreten / Entlassung | `{sentenceId, targetCharacterId?, minutes?, reason, issuedByCharacterId?/releasedByCharacterId?}` |
+
+### vehicle.repair (implementiert, Phase 3)
+| Typ | Trigger | Payload |
+|---|---|---|
+| `vehicle.repair` | Werkstatt-Reparatur (kein Auto-Heal!) | `{plate, mechanicCharacterId, engineBefore, engineAfter}` |
+
 ### Reserviert für Folgephasen (Namespace fixiert, Schema folgt je Modul)
-`combat.shot`, `combat.damage`, `combat.down`, `combat.kill_file` ·
+`combat.shot` (Einzelschuss-Sampling mit Munitionstyp) · `combat.kill_file` (aggregierte Kill-Akte) ·
 `vehicle.lock/unlock/tune/damage` · `comms.chat/call_meta/call_content/radio/tweet/ad` ·
-`door.access` · `web.login/mutation` · `director.event` · `law.change` · `territory.tick`
+`door.access` · `web.login/mutation` · `director.event` · `territory.tick`
 
 ## 3. Zustellgarantie
 

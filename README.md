@@ -4,7 +4,7 @@ Eigenes, modulares FiveM-Framework mit **totaler Nachverfolgbarkeit**
 (Event-Sourcing der kompletten Spielwelt) und **dynamischer Spielwelt**
 (kein statischer Wert, wo ein dynamisches System möglich ist).
 
-## Status: Phase 1 — Fundament ✅ · Phase 2 — Kernsysteme ✅
+## Status: Phase 1 — Fundament ✅ · Phase 2 — Kernsysteme ✅ · Phase 3 — Fraktionen ✅
 
 | Baustein | Stand |
 |---|---|
@@ -22,10 +22,14 @@ Eigenes, modulares FiveM-Framework mit **totaler Nachverfolgbarkeit**
 | Fahrzeuge (Kauf, Garagen, Schlüssel, Kraftstoff/Kilometer, Persistenz) | ✅ |
 | Smartphone-Basis (Rufnummern, Kontakte, SMS mit comms.sms) | ✅ |
 | Voice | 📋 Integrations-Guide [docs/voice.md](docs/voice.md) (SaltyChat, lizenzbedingt extern) |
+| Verletzungssystem (Trefferzonen, Bewusstlosigkeit statt Respawn, Krankenakten, Vitals) | ✅ |
+| Polizei (MDT-Datenbasis mit Access-Log, Strafregister, Fahndungen, Beweismittelkette) | ✅ |
+| Justiz (versioniertes Gesetzbuch, Bußgelder, Haft mit Geofence) | ✅ |
+| Mechaniker (Reparatur ohne Auto-Heal, Rechnungssystem) | ✅ |
 
-Folgephasen: 3 Fraktionen (Polizei/MDT, Medic/Verletzungssystem, Justiz, Mechaniker) ·
-4 Dynamik (World Director, Territorien, illegale Ketten, Immobilien, Skills) ·
-5 Web (Homepage, UCP, ACP mit Timeline/Geldfluss-Graph/Session-Replay) · 6 Härtung.
+Folgephasen: 4 Dynamik (World Director, dynamische Ressourcen/Territorien,
+illegale Ketten, Immobilien, Firmen, Skills) · 5 Web (Homepage, UCP, ACP mit
+Timeline/Geldfluss-Graph/Session-Replay) · 6 Härtung.
 
 ## Dokumentation
 
