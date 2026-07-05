@@ -148,6 +148,7 @@ Core:RegisterSecureEvent('hrp:vehicles:garageOut', {
     local entity = CreateVehicleServerSetter(joaat(veh.model), 'automobile', s.x, s.y, s.z, s.w)
     if not entity or entity == 0 then return reply(src, false, 'Ausparken fehlgeschlagen.') end
     SetVehicleNumberPlateText(entity, veh.plate)
+    Entity(entity).state:set('hrp_tune', veh.tune_stage or 0, true)
 
     Db.update('UPDATE vehicles SET stored = 0 WHERE id = ?', { veh.id })
     local state = {

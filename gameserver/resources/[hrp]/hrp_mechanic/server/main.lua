@@ -86,6 +86,39 @@ RegisterCommand('service', function(src)
     reply(src, true, ('Wartung an %s durchgeführt — Verschleiß-Intervall zurückgesetzt.'):format(plate or ''))
 end, false)
 
+-- /tune <0-3> — Motor-Tuning-Stufe (persistiert; wirkt über Entity-State)
+RegisterCommand('tune', function(src, args)
+    if src == 0 then return end
+    local ident = isMechanic(src)
+    if not ident then return reply(src, false, 'Nur Mechaniker im Dienst.') end
+    local stage = tonumber(args[1])
+    if not stage or stage < 0 or stage > 3 then return reply(src, false, 'Nutzung: /tune <0-3>') end
+
+    local ped = GetPlayerPed(src)
+    local vehicle = GetVehiclePedIsIn(ped, false)
+    if vehicle == 0 then
+        local pos = GetEntityCoords(ped)
+        for _, veh in ipairs(GetAllVehicles()) do
+            if #(GetEntityCoords(veh) - pos) < 5.0 then vehicle = veh break end
+        end
+    end
+    if vehicle == 0 then return reply(src, false, 'Kein Fahrzeug in der Nähe.') end
+
+    local plate = GetVehicleNumberPlateText(vehicle)
+    local before = Db.single('SELECT tune_stage FROM vehicles WHERE plate = ?', { plate })
+    if not before then return reply(src, false, 'Dieses Fahrzeug ist nicht registriert.') end
+
+    Db.update('UPDATE vehicles SET tune_stage = ? WHERE plate = ?', { stage, plate })
+    Entity(vehicle).state:set('hrp_tune', stage, true)
+
+    Core:Log(src, 'vehicle.tune', {
+        target = { kind = 'vehicle', id = plate or 'unknown' },
+        payload = { plate = plate, mechanicCharacterId = ident.characterId,
+                    stageBefore = before.tune_stage, stageAfter = stage },
+    })
+    reply(src, true, ('Tuning-Stufe %d verbaut (%s). Rechnung: /bill.'):format(stage, plate))
+end, false)
+
 -- ---------------------------------------------------------------------------
 -- Rechnungen
 -- ---------------------------------------------------------------------------

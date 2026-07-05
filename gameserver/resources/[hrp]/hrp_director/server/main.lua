@@ -81,6 +81,69 @@ local registry = {
     },
 }
 
+-- Geldtransport: gepanzerter Transporter auf zufälliger Route — Überfall
+-- möglich, wenn der Motor tot ist (/robtransport), massive Spuren garantiert.
+local activeTransport = nil
+
+registry.money_transport = {
+    defaultWeight = 12,
+    run = function()
+        if activeTransport and DoesEntityExist(activeTransport.entity) then return nil end
+        local spot = ACCIDENT_SPOTS[math.random(#ACCIDENT_SPOTS)]
+        local veh = CreateVehicleServerSetter(joaat('stockade'), 'automobile',
+            spot.pos.x, spot.pos.y, spot.pos.z, spot.pos.w)
+        if not veh or veh == 0 then return nil end
+        activeTransport = { entity = veh, looted = false, spawnedAt = os.time() }
+        Entity(veh).state:set('hrp_transport', true, true)
+
+        TriggerClientEvent('chat:addMessage', -1, {
+            args = { '^3NEWS', ('Ein Geldtransport ist unterwegs — zuletzt gesehen: %s.'):format(spot.label) },
+        })
+        notifyDuty({ police = true }, ('Geldtransport-Begleitschutz angefordert: %s'):format(spot.label))
+
+        SetTimeout(15 * 60000, function()
+            if activeTransport and DoesEntityExist(activeTransport.entity) then
+                DeleteEntity(activeTransport.entity)
+            end
+            activeTransport = nil
+        end)
+        return { location = spot.label }
+    end,
+}
+
+RegisterCommand('robtransport', function(src)
+    if src == 0 then return end
+    local Core2 = exports.hrp_core
+    local ident = Core2:GetPlayerIdentity(src)
+    if not ident or not ident.characterId then return end
+    if not activeTransport or not DoesEntityExist(activeTransport.entity) or activeTransport.looted then
+        return TriggerClientEvent('chat:addMessage', src, { args = { '^1RAUB', 'Kein aufgebrochener Transport in der Nähe.' } })
+    end
+    local tvPos = GetEntityCoords(activeTransport.entity)
+    if #(GetEntityCoords(GetPlayerPed(src)) - tvPos) > 8.0 then
+        return TriggerClientEvent('chat:addMessage', src, { args = { '^1RAUB', 'Du bist zu weit weg.' } })
+    end
+    if GetVehicleEngineHealth(activeTransport.entity) > 100.0 then
+        return TriggerClientEvent('chat:addMessage', src, { args = { '^1RAUB', 'Der Transporter fährt noch — erst stoppen.' } })
+    end
+
+    activeTransport.looted = true
+    local loot = Core:TuningGet('director.transport_loot', 250000)
+        + math.random(0, Core:TuningGet('director.transport_loot_variance', 100000))
+    Core:MoneyCreate(ident.characterId, 'cash', loot, 'heist.loot')
+
+    Core:Log(src, 'crime.trace', {
+        payload = { crime = 'transport_robbery', hint = 'Geldtransport überfallen',
+                    suspectCharacterId = ident.characterId,
+                    pos = { x = tvPos.x, y = tvPos.y, z = tvPos.z } },
+    })
+    notifyDuty({ police = true }, 'GELDTRANSPORT ÜBERFALLEN — alle Einheiten!')
+    TriggerClientEvent('chat:addMessage', src, {
+        args = { '^2RAUB', ('Du schnappst dir %s $ — und die halbe Stadt hat es gesehen.')
+            :format(string.format('%.2f', loot / 100)) },
+    })
+end, false)
+
 local function pickWeighted()
     local total, weights = 0, {}
     for name, def in pairs(registry) do

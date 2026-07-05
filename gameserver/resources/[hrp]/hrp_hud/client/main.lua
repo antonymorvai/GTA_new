@@ -6,6 +6,11 @@
 
 local vitals = { hunger = 100, thirst = 100 }
 local fuel = nil   -- {liters, tank} nur im Fahrzeug
+local clock = { h = 9, m = 0 }
+
+RegisterNetEvent('hrp:weather:time', function(hour, minute)
+    clock.h, clock.m = hour, minute
+end)
 
 RegisterNetEvent('hrp:medical:vitals', function(hunger, thirst)
     vitals.hunger = hunger
@@ -44,6 +49,7 @@ CreateThread(function()
             thirst = vitals.thirst,
             speed = inVehicle and speed or nil,
             fuel = fuel and math.floor(fuel.liters / fuel.tank * 100) or nil,
+            clock = ('%02d:%02d'):format(clock.h, clock.m),
         })
     end
 end)

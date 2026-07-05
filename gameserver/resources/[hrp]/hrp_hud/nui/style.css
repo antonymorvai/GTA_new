@@ -2,6 +2,12 @@
 body { background: transparent; overflow: hidden; }
 .hidden { display: none !important; }
 
+#clock {
+    position: fixed; top: 14px; right: 18px;
+    color: #fff; font-size: 15px; font-weight: 600;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+}
+
 #hud {
     position: fixed; left: 18px; bottom: 18px;
     width: 190px; display: flex; flex-direction: column; gap: 5px;

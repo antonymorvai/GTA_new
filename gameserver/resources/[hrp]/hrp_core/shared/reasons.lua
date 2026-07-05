@@ -41,6 +41,7 @@ HRPReasons = {
         ['insurance.premium'] = true,   -- Senke: Versicherungsprämie
         ['insurance.payout']  = true,   -- Quelle: Versicherungsleistung
         ['insurance.deductible'] = true, -- Senke: Selbstbeteiligung Vollkasko
+        ['heist.loot']        = true,   -- Quelle: Raub-Beute (illegal, massive Spuren)
     },
     item = {
         ['shop.buy']          = true,

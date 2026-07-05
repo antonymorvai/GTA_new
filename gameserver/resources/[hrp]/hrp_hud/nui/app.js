@@ -20,6 +20,8 @@ window.addEventListener('message', (event) => {
     document.getElementById('row-fuel').classList.toggle('hidden', d.fuel == null);
     if (d.fuel != null) setBar('fuel', d.fuel);
 
+    if (d.clock) document.getElementById('clock').textContent = d.clock;
+
     const speedEl = document.getElementById('speed');
     speedEl.classList.toggle('hidden', d.speed == null);
     if (d.speed != null) speedEl.innerHTML = `${d.speed} <small>km/h</small>`;

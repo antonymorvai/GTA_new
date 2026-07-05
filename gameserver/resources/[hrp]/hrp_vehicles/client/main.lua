@@ -5,10 +5,19 @@ local wasInVehicle = false
 CreateThread(function()
     while true do
         Wait(500)
-        local inVehicle = IsPedInAnyVehicle(PlayerPedId(), false)
+        local ped = PlayerPedId()
+        local inVehicle = IsPedInAnyVehicle(ped, false)
         if inVehicle ~= wasInVehicle then
             wasInVehicle = inVehicle
             TriggerServerEvent('hrp:vehicles:seat', inVehicle)
+        end
+        -- Tuning-Stufe anwenden (Entity-State vom Server)
+        if inVehicle then
+            local veh = GetVehiclePedIsIn(ped, false)
+            if GetPedInVehicleSeat(veh, -1) == ped then
+                local stage = Entity(veh).state.hrp_tune or 0
+                SetVehicleEnginePowerMultiplier(veh, stage * 15.0)  -- +15 % je Stufe
+            end
         end
     end
 end)

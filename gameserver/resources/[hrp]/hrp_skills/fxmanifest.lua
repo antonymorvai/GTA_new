@@ -18,4 +18,6 @@ server_scripts {
     'server/main.lua',
 }
 
-server_only 'yes'
+client_scripts {
+    'client/main.lua',
+}

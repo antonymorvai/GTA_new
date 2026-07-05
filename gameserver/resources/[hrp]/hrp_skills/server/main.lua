@@ -57,6 +57,16 @@ end
 exports('AddXp', addXp)
 exports('GetLevel', getLevel)
 
+-- Ausdauer durch Sprinten (Client-Batch, server-geklemmt)
+Core:RegisterSecureEvent('hrp:skills:sprint', {
+    rate = 0.05, burst = 2,
+    schema = { { type = 'number', integer = true, min = 1, max = 60 } },
+}, function(src, seconds)
+    local ident = Core:GetPlayerIdentity(src)
+    addXp(ident.characterId, 'stamina', math.min(seconds, 30), src)
+    TriggerClientEvent('hrp:skills:staminaLevel', src, getLevel(ident.characterId, 'stamina'))
+end)
+
 RegisterCommand('skills', function(src)
     if src == 0 then return end
     local ident = Core:GetPlayerIdentity(src)
