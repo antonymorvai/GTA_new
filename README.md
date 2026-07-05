@@ -54,6 +54,10 @@ Eigenes, modulares FiveM-Framework mit **totaler Nachverfolgbarkeit**
 | Live-Karte (aktive Charaktere, 5-s-Refresh) + Homepage-Live-Status | ✅ |
 | In-Game-HUD (Vitals, Tank, Tacho) + Inventar-NUI (F2) | ✅ |
 | Discord-Alerts (Anti-Cheat, Bans, Anomalien, Fehler — throttled) | ✅ |
+| Waffen als Item-Instanzen (Ausrüsten, Munition, Schusszähler/Ballistik) | ✅ |
+| Crafting (DB-Rezepte, Skill-Freischaltung, Qualität) | ✅ |
+| Wetterfronten + synchrone Uhr (Glätte bei Regen, ACP-Override) | ✅ |
+| Fahrzeug-Verschleiß mit Wartungsintervall (/service) | ✅ |
 
 ## Dokumentation
 

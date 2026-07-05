@@ -79,6 +79,12 @@ Core:RegisterSecureEvent('hrp:inventory:use', {
         return
     end
 
+    -- Waffen werden AUSGERÜSTET, nicht konsumiert (hrp_weapons übernimmt)
+    if def.category == 'weapon' then
+        TriggerEvent('hrp:items:equip', src, instance.name, uuid)
+        return
+    end
+
     local ok = Inventory.Consume(uuid, 1, { srcForLog = src })
     if ok then
         TriggerEvent('hrp:items:used', src, instance.name, uuid)

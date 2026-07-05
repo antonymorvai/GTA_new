@@ -59,6 +59,33 @@ RegisterCommand('repair', function(src)
     reply(src, true, ('Fahrzeug %s repariert. Rechnung stellen mit /bill.'):format(plate or ''))
 end, false)
 
+-- /service — Wartung: setzt das Verschleiß-Intervall zurück (Rechnung via /bill)
+RegisterCommand('service', function(src)
+    if src == 0 then return end
+    local ident = isMechanic(src)
+    if not ident then return reply(src, false, 'Nur Mechaniker im Dienst.') end
+
+    local ped = GetPlayerPed(src)
+    local vehicle = GetVehiclePedIsIn(ped, false)
+    if vehicle == 0 then
+        local pos = GetEntityCoords(ped)
+        for _, veh in ipairs(GetAllVehicles()) do
+            if #(GetEntityCoords(veh) - pos) < 5.0 then vehicle = veh break end
+        end
+    end
+    if vehicle == 0 then return reply(src, false, 'Kein Fahrzeug in der Nähe.') end
+
+    local plate = GetVehicleNumberPlateText(vehicle)
+    local ok = pcall(function() return exports.hrp_vehicles:MarkServiced(plate) end)
+    if not ok then return reply(src, false, 'Dieses Fahrzeug ist nicht registriert.') end
+
+    Core:Log(src, 'vehicle.service', {
+        target = { kind = 'vehicle', id = plate or 'unknown' },
+        payload = { plate = plate, mechanicCharacterId = ident.characterId },
+    })
+    reply(src, true, ('Wartung an %s durchgeführt — Verschleiß-Intervall zurückgesetzt.'):format(plate or ''))
+end, false)
+
 -- ---------------------------------------------------------------------------
 -- Rechnungen
 -- ---------------------------------------------------------------------------

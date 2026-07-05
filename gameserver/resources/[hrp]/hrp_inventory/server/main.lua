@@ -173,6 +173,10 @@ function Inventory.Move(uuid, toContainer, opts)
             to = { type = toContainer.type, id = tostring(toContainer.id) },
         },
     })
+    -- Hook für Module mit Besitz-Bindung (z. B. hrp_weapons: Waffe entziehen)
+    if inst.container_type == 'character' then
+        TriggerEvent('hrp:inventory:instanceMoved', uuid)
+    end
     return true
 end
 
@@ -236,6 +240,34 @@ function Inventory.Destroy(uuid, reason, opts)
         correlationId = opts.correlationId,
         payload = { uuid = uuid, reason = reason },
     })
+    TriggerEvent('hrp:inventory:instanceMoved', uuid)
+    return true
+end
+
+--- Metadaten/Qualität einer Instanz ändern (Merge) — z. B. geladene Munition,
+--- Fingerabdrücke, Herkunft. Erzeugt item.modify mit Vorher/Nachher.
+function Inventory.Modify(uuid, changes, reason, opts)
+    opts = opts or {}
+    local row = Db.single('SELECT id, quality, metadata, destroyed_at FROM item_instances WHERE uuid = ?', { uuid })
+    if not row or row.destroyed_at then return false, 'not_found' end
+
+    local before = { quality = row.quality, metadata = row.metadata and json.decode(row.metadata) or {} }
+    local newMeta = before.metadata
+    for k, v in pairs(changes.metadata or {}) do newMeta[k] = v end
+    local newQuality = changes.quality ~= nil and changes.quality or row.quality
+
+    Db.update('UPDATE item_instances SET quality = ?, metadata = ? WHERE id = ?',
+        { newQuality, json.encode(newMeta), row.id })
+
+    Core:Log(opts.srcForLog, 'item.modify', {
+        target = { kind = 'item', id = uuid },
+        correlationId = opts.correlationId,
+        payload = {
+            uuid = uuid, reason = reason or 'unspecified',
+            before = before,
+            after = { quality = newQuality, metadata = newMeta },
+        },
+    })
     return true
 end
 
@@ -257,6 +289,22 @@ function HRPReasonsValid(category, code)
     return Core:IsValidReason(category, code)
 end
 
+--- Schusszähler einer Waffen-Instanz erhöhen (hrp_weapons; das zugehörige
+--- combat.shot-Event erzeugt der Aufrufer mit Kontext).
+function Inventory.AddShots(uuid, shots)
+    return Db.update(
+        'UPDATE item_instances SET shots_fired = shots_fired + ? WHERE uuid = ? AND destroyed_at IS NULL',
+        { math.max(0, math.floor(shots)), uuid }) == 1
+end
+
+exports('AddShots', function(...) return Inventory.AddShots(...) end)
+exports('Modify', function(...) return Inventory.Modify(...) end)
+exports('GetInstanceMeta', function(uuid)
+    local row = Db.single('SELECT quality, metadata, serial_number FROM item_instances WHERE uuid = ? AND destroyed_at IS NULL', { uuid })
+    if not row then return nil end
+    return { quality = row.quality, serialNumber = row.serial_number,
+             metadata = row.metadata and json.decode(row.metadata) or {} }
+end)
 exports('Create', function(...) return Inventory.Create(...) end)
 exports('Move', function(...) return Inventory.Move(...) end)
 exports('Transfer', function(...) return Inventory.Transfer(...) end)

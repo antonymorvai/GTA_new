@@ -244,8 +244,26 @@ Wird vom Backend in die Tabelle `position_samples` entrollt → Bewegungs-Replay
 | `admin.access` | JEDER ACP-Lesezugriff (Akte, Logs, Timeline, Replay, Tuning) | `{view, targetAccountId?, filters?, ...}` |
 | `anomaly.detected` | Anomalie-Regel schlägt an (Prüf-Queue) | `{rule, total?/count?, threshold}` |
 
+### weapon.* / combat.shot (implementiert — Waffen als Instanzen)
+| Typ | Trigger | Payload |
+|---|---|---|
+| `weapon.equip` / `weapon.holster` | Ausrüsten/Wegstecken über das Inventar | `{uuid, item, serialNumber?, ammoLoaded?}` |
+| `weapon.load` | Munitions-Item lädt die ausgerüstete Waffe | `{uuid, rounds, ammoLoaded}` |
+| `combat.shot` | Schuss-Batch (client-gemeldet, server-geklemmt auf geladene Munition) | `{uuid, item, serialNumber, shots, ammoRemaining}` — erhöht shots_fired der Instanz (Ballistik für /serialcheck) |
+
+### craft.* (implementiert)
+| Typ | Trigger | Payload |
+|---|---|---|
+| `craft.complete` | Rezept gefertigt (Zutaten-consume + Ergebnis-create korreliert) | `{recipe, output, quantity, quality, skillLevel}` |
+
+### weather.* / vehicle.service (implementiert)
+| Typ | Trigger | Payload |
+|---|---|---|
+| `weather.change` | Wetterfront wechselt (Zustandsmaschine oder ACP-Override) | `{before, after, override}` |
+| `vehicle.service` | Wartung (setzt Verschleiß-Intervall zurück) | `{plate, mechanicCharacterId}` |
+
 ### Reserviert für Folgephasen (Namespace fixiert, Schema folgt je Modul)
-`combat.shot` (Einzelschuss-Sampling mit Munitionstyp) · `combat.kill_file` (aggregierte Kill-Akte) ·
+`combat.kill_file` (aggregierte Kill-Akte) ·
 `vehicle.lock/unlock/tune/damage` · `comms.chat/call_meta/call_content/radio/tweet/ad` ·
 `law.vote` (Gesetzgebungs-Workflow der Regierung)
 

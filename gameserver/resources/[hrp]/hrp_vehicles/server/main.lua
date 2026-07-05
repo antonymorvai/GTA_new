@@ -141,6 +141,7 @@ Core:RegisterSecureEvent('hrp:vehicles:garageOut', {
     local state = {
         entity = entity, plate = veh.plate, vehicleId = veh.id, ownerId = veh.owner_id,
         fuel = tonumber(veh.fuel_liters), mileage = tonumber(veh.mileage_km),
+        lastService = tonumber(veh.last_service_km) or 0,
         consumption = tonumber(Db.scalar('SELECT consumption_per_100km FROM vehicle_models WHERE id = ?', { veh.model_id })),
         tank = tonumber(Db.scalar('SELECT tank_liters FROM vehicle_models WHERE id = ?', { veh.model_id })),
         lastCoords = vector3(s.x, s.y, s.z),
@@ -318,6 +319,18 @@ CreateThread(function()
                         -- Motor aus bei leerem Tank (server-autoritativ)
                         SetVehicleEngineOn(state.entity, false, true, true)
                     end
+
+                    -- Verschleiß: Motor altert pro km; jenseits des Wartungs-
+                    -- intervalls doppelt so schnell (kein Auto-Heal — nur die
+                    -- Werkstatt repariert, /service setzt das Intervall zurück)
+                    local wearPerKm = Core:TuningGet('vehicles.wear_per_km', 0.35)
+                    local interval = Core:TuningGet('vehicles.service_interval_km', 500.0)
+                    local overdue = (state.mileage - state.lastService) > interval
+                    local wear = km * wearPerKm * (overdue and 2.0 or 1.0)
+                    local engine = GetVehicleEngineHealth(state.entity)
+                    if engine > 150.0 then
+                        SetVehicleEngineHealth(state.entity, math.max(150.0, engine - wear))
+                    end
                 end
                 -- Tankstand an den Fahrer pushen (HUD)
                 local driverPed = GetPedInVehicleSeat(state.entity, -1)
@@ -350,6 +363,18 @@ CreateThread(function()
         end
     end
 end)
+
+--- Wartung durchgeführt (hrp_mechanic): Intervall zurücksetzen.
+local function markServiced(plate)
+    local affected = Db.update(
+        'UPDATE vehicles SET last_service_km = mileage_km WHERE plate = ? AND deleted_at IS NULL', { plate })
+    if affected == 0 then return false end
+    local state = byPlate[plate]
+    if state then state.lastService = state.mileage end
+    return true
+end
+
+exports('MarkServiced', markServiced)
 
 -- Meine Fahrzeuge auflisten
 Core:RegisterSecureEvent('hrp:vehicles:list', { rate = 0.5, burst = 2 }, function(src)
