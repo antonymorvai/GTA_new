@@ -169,6 +169,17 @@ pollt den Stand alle 60 s (hrp_core/tuning) — Änderungen ohne Restart wirksam
 | CI | GitHub Actions: Backend-Build+Tests, Web-Build, Lua-Syntax+Tests+Audit |
 | Launch | `docs/launch-checklist.md` — 9 Abschnitte bis zur Whitelist-Öffnung |
 
+## 5g. Launch-Sprint
+
+| Baustein | Beschreibung |
+|---|---|
+| Whitelist-Workflow | UCP: Fragebogen + Regeltest (10 Fragen, server-bewertet, korrekte Antworten bleiben server-seitig); ACP: Review-Queue mit Begründungspflicht bei Ablehnung |
+| Tickets/Reports | UCP-Threads mit Beweis-Feldern; ACP-Queue (open/answered/closed) mit Team-Antworten |
+| Sanktionen | ACP: Warn/Ban mit Begründungs- UND Beweis-Pflicht; Bans via account_bans beim Connect wirksam; lückenlose sanctions-Historie |
+| Karten-Werkzeuge | GameMap-SVG (Copyright-frei): Session-Replay mit Abspielen, Kill-Akte (Schäden + Pfade Opfer/Täter), Live-Karte (5-s-Refresh) |
+| In-Game-UX | hrp_hud (Vitals/Tank/Tacho), Inventar-NUI (F2: benutzen/geben/ablegen über die abgesicherten Events) |
+| Ops | Discord-Webhook-Alerts (AlertService im Consumer, throttled), öffentlicher /v1/public/status fürs Homepage-Widget |
+
 ## 6. Sicherheits-Grundlagen (Phase 1 aktiv)
 
 - `server.cfg`: `sv_scriptHookAllowed 0`, `sv_enforceGameBuild`, OneSync on,

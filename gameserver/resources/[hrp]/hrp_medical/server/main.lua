@@ -354,6 +354,15 @@ CreateThread(function()
     end
 end)
 
+-- HUD fragt Vitals beim Start / nach Spawn ab
+Core:RegisterSecureEvent('hrp:medical:requestVitals', { rate = 0.5, burst = 3 }, function(src)
+    local ident = Core:GetPlayerIdentity(src)
+    local v = Db.single('SELECT hunger, thirst FROM character_vitals WHERE character_id = ?', { ident.characterId })
+    if v then
+        TriggerClientEvent('hrp:medical:vitals', src, v.hunger, v.thirst)
+    end
+end)
+
 RegisterCommand('vitals', function(src)
     if src == 0 then return end
     local ident = Core:GetPlayerIdentity(src)

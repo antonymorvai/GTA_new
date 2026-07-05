@@ -319,6 +319,17 @@ CreateThread(function()
                         SetVehicleEngineOn(state.entity, false, true, true)
                     end
                 end
+                -- Tankstand an den Fahrer pushen (HUD)
+                local driverPed = GetPedInVehicleSeat(state.entity, -1)
+                if driverPed and driverPed ~= 0 then
+                    for _, srcStr in ipairs(GetPlayers()) do
+                        local pSrc = tonumber(srcStr)
+                        if GetPlayerPed(pSrc) == driverPed then
+                            TriggerClientEvent('hrp:vehicles:fuel', pSrc, state.fuel, state.tank)
+                            break
+                        end
+                    end
+                end
             end
         end
     end

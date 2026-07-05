@@ -16,7 +16,14 @@ nie hart gelöscht (Soft-Delete via `destroyed_at`).
 `Destroy(uuid, reason, opts)`, `GetContainer(type, id)`, `GetCarryWeight(charId)`.
 `reason` muss in der Reason-Registry (`hrp_core/shared/reasons.lua`) stehen.
 
+## Inventar-NUI
+`F2` oder `/inv`: Liste mit Gewichtsbalken; pro Item **Benutzen** (konsumiert
+1 Einheit, Effekte via `hrp:items:used`), **Geben** (Ziel-ID, Distanz-Check
+serverseitig) und **Ablegen**. Das NUI zeigt nur an — jede Aktion läuft durch
+die abgesicherten Server-Events.
+
 ## Client-Events (abgesichert)
+`hrp:inventory:request` (Inhalt fürs NUI), `hrp:inventory:use`,
 `hrp:inventory:give` (Übergabe, Distanz-Check), `hrp:inventory:drop` (Boden).
 
 ## Admin

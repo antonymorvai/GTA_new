@@ -46,6 +46,14 @@ Eigenes, modulares FiveM-Framework mit **totaler Nachverfolgbarkeit**
 | Lasttest-Skript (2.000 Events/s-Abnahme) | ✅ `scripts/loadtest/` |
 | OpenAPI (`/api-docs`), CI (Backend/Web/Lua+Audit) | ✅ |
 | Launch-Checkliste | ✅ [docs/launch-checklist.md](docs/launch-checklist.md) |
+| Whitelist-Bewerbung (Fragebogen + server-bewerteter Regeltest) + ACP-Review | ✅ |
+| Ticketsystem & Spielerreports (UCP + ACP-Queue, Beweis-Felder) | ✅ |
+| Sanktions-Workflow im ACP (Begründungs- + Beweis-Pflicht, Historie) | ✅ |
+| Session-Replay-Kartenansicht (Route abspielen, Zeit-Slider) | ✅ |
+| Kill-Akte (Down + Schäden + Bewegungspfade Opfer/Täter auf Karte) | ✅ |
+| Live-Karte (aktive Charaktere, 5-s-Refresh) + Homepage-Live-Status | ✅ |
+| In-Game-HUD (Vitals, Tank, Tacho) + Inventar-NUI (F2) | ✅ |
+| Discord-Alerts (Anti-Cheat, Bans, Anomalien, Fehler — throttled) | ✅ |
 
 ## Dokumentation
 

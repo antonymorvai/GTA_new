@@ -50,6 +50,15 @@ Core:RegisterSecureEvent('hrp:inventory:drop', {
     Inventory.Move(uuid, { type = 'ground', id = groundId }, { srcForLog = src })
 end)
 
+-- Inventar-Inhalt fürs NUI (eigener Charakter)
+Core:RegisterSecureEvent('hrp:inventory:request', { rate = 1, burst = 4 }, function(src)
+    local ident = Core:GetPlayerIdentity(src)
+    local items = Inventory.GetContainer('character', ident.characterId) or {}
+    local weight = Inventory.GetCarryWeight(ident.characterId) or 0
+    TriggerClientEvent('hrp:inventory:contents', src, items, weight,
+        GetConvarInt('hrp_max_carry_grams', 30000))
+end)
+
 -- Item benutzen: konsumiert 1 Einheit und meldet die Nutzung an Effekt-Module
 -- (z. B. hrp_medical für Essen/Trinken/Verbände) über das Server-Event
 -- 'hrp:items:used' (src, itemName, uuid).

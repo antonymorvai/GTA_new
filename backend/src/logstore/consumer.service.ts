@@ -3,6 +3,7 @@ import type Redis from 'ioredis';
 import { EventEnvelope, EventEnvelopeSchema } from '../common/event-envelope';
 import { REDIS, STREAMS } from '../redis/redis.provider';
 import { LogstoreWriter } from './logstore.writer';
+import { AlertService } from './alert.service';
 
 type StreamEntry = [id: string, fields: string[]];
 
@@ -20,6 +21,7 @@ export class ConsumerService implements OnModuleInit, OnModuleDestroy {
   constructor(
     @Inject(REDIS) private readonly redis: Redis,
     private readonly writer: LogstoreWriter,
+    private readonly alerts: AlertService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -89,6 +91,8 @@ export class ConsumerService implements OnModuleInit, OnModuleDestroy {
       // ist schlimmer als Duplikate; event_id erlaubt Dedup in Auswertungen).
       await this.writer.writeBatch(valid);
       await this.redis.xack(STREAMS.events, STREAMS.group, ...validIds);
+      // Alerts NACH erfolgreichem Persistieren (nie blockierend für die Pipeline)
+      void this.alerts.checkBatch(valid);
     }
 
     if (dead.length > 0) {
