@@ -112,6 +112,57 @@ function HRP.Money.GetBalance(characterId, account)
 end
 
 -- ---------------------------------------------------------------------------
+-- Staatskasse (state_treasury): Einnahmen aus Bußgeldern/Staatsverkäufen/
+-- Steuern, Ausgaben für Staatslöhne. Leere Kasse = Debit schlägt fehl.
+-- ---------------------------------------------------------------------------
+
+HRP.Treasury = {}
+
+local function treasuryDelta(delta)
+    local guard = delta < 0 and (' AND balance + %d >= 0'):format(delta) or ''
+    return Db.update(
+        ('UPDATE state_treasury SET balance = balance + ? WHERE id = 1%s'):format(guard),
+        { delta }) == 1
+end
+
+local function treasuryLog(direction, amount, reason, opts)
+    exports.hrp_logger:Log('state.treasury', {
+        target = { kind = 'state', id = 'treasury' },
+        correlationId = opts and opts.correlationId,
+        payload = {
+            direction = direction, amount = amount, reason = reason,
+            balanceAfter = Db.scalar('SELECT balance FROM state_treasury WHERE id = 1'),
+        },
+    })
+end
+
+--- Einnahme (Bußgeld, Staatsverkauf, Steuer).
+function HRP.Treasury.Credit(amount, reason, opts)
+    if type(amount) ~= 'number' or amount % 1 ~= 0 or amount <= 0 then return false, 'invalid_amount' end
+    if not HRPReasons.IsValid('money', reason) then return false, 'unknown_reason' end
+    treasuryDelta(amount)
+    treasuryLog('credit', amount, reason, opts)
+    return true
+end
+
+--- Ausgabe (Staatslöhne). Schlägt bei leerer Kasse fehl.
+function HRP.Treasury.Debit(amount, reason, opts)
+    if type(amount) ~= 'number' or amount % 1 ~= 0 or amount <= 0 then return false, 'invalid_amount' end
+    if not HRPReasons.IsValid('money', reason) then return false, 'unknown_reason' end
+    if not treasuryDelta(-amount) then return false, 'treasury_empty' end
+    treasuryLog('debit', amount, reason, opts)
+    return true
+end
+
+function HRP.Treasury.GetBalance()
+    return Db.scalar('SELECT balance FROM state_treasury WHERE id = 1')
+end
+
+exports('TreasuryCredit', function(...) return HRP.Treasury.Credit(...) end)
+exports('TreasuryDebit', function(...) return HRP.Treasury.Debit(...) end)
+exports('TreasuryGetBalance', function() return HRP.Treasury.GetBalance() end)
+
+-- ---------------------------------------------------------------------------
 -- Firmenkonten (company_funds): gleiche Invariante, target kind 'company'.
 -- ---------------------------------------------------------------------------
 

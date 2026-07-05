@@ -155,6 +155,7 @@ RegisterCommand('payfine', function(src, args)
     if not paid then return reply(src, false, 'Zahlung fehlgeschlagen.') end
 
     Db.update("UPDATE fines SET status = 'paid', paid_at = NOW(3) WHERE id = ?", { fine.id })
+    Core:TreasuryCredit(fine.amount, 'fine.payment', { correlationId = correlationId })
     Core:Log(src, 'justice.fine_paid', {
         target = { kind = 'character', id = tostring(ident.characterId) },
         correlationId = correlationId,

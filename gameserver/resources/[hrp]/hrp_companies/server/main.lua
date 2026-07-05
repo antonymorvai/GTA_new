@@ -169,7 +169,18 @@ CreateThread(function()
                     local ok = Core:MoneyCompanyTransfer(ident.characterId, my.company_id, 'bank',
                         my.salary, 'to_character', 'company.salary', { correlationId = correlationId })
                     if ok then
-                        reply(src, true, ('Lohn von %s: %s $'):format(my.label, string.format('%.2f', my.salary / 100)))
+                        -- Einkommensteuer: Abzug vom Bruttolohn in die Staatskasse
+                        local taxRate = Core:TuningGet('tax.income_rate', 0.08)
+                        local tax = math.floor(my.salary * taxRate)
+                        if tax > 0 then
+                            local taxed = Core:MoneyDestroy(ident.characterId, 'bank', tax, 'tax.income',
+                                { correlationId = correlationId })
+                            if taxed then
+                                Core:TreasuryCredit(tax, 'tax.income', { correlationId = correlationId })
+                            end
+                        end
+                        reply(src, true, ('Lohn von %s: %s $ (davon %s $ Einkommensteuer)')
+                            :format(my.label, string.format('%.2f', my.salary / 100), string.format('%.2f', tax / 100)))
                     else
                         Logger:Log('company.payroll_failed', {
                             target = { kind = 'company', id = tostring(my.company_id) },

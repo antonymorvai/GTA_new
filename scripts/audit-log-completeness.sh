@@ -41,6 +41,7 @@ check_table "company_funds" \
     "hrp_companies/server/main.lua"         # nur INSERT der 0-Zeile bei Gründung
 check_table "item_instances" "hrp_inventory/server/main.lua"
 check_table "item_locations" "hrp_inventory/server/main.lua"
+check_table "state_treasury" "hrp_core/server/money.lua"
 
 # Die Erstellungs-INSERTs dürfen keinen Startsaldo setzen (Geld nur via API):
 if grep -rn --include='*.lua' -E "INSERT INTO (character_money|company_funds)[^)]*balance|INSERT INTO character_money \(character_id, ?(cash|bank)" "$RES" | grep -v 'VALUES (?)' ; then

@@ -10,6 +10,7 @@ const NAV = [
   { href: '/acp/applications', label: 'Bewerbungen' },
   { href: '/acp/tickets', label: 'Tickets' },
   { href: '/acp/sanctions', label: 'Sanktionen' },
+  { href: '/acp/economy', label: 'Wirtschaft' },
   { href: '/acp/logs', label: 'Log-Explorer' },
   { href: '/acp/trace', label: 'Item-Trace & Geldfluss' },
   { href: '/acp/replay', label: 'Session-Replay' },

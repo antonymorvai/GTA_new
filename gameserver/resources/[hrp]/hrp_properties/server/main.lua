@@ -66,6 +66,7 @@ Core:RegisterSecureEvent('hrp:properties:buy', { rate = 0.3, burst = 2 }, functi
         { correlationId = correlationId })
     if not paid then return reply(src, false, 'Zahlung fehlgeschlagen.') end
 
+    Core:TreasuryCredit(prop.current_price, 'property.buy', { correlationId = correlationId })
     Db.update('UPDATE properties SET owner_id = ?, purchased_at = NOW(3) WHERE id = ?',
         { ident.characterId, prop.id })
 

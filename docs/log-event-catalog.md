@@ -251,6 +251,11 @@ Wird vom Backend in die Tabelle `position_samples` entrollt → Bewegungs-Replay
 | `weapon.load` | Munitions-Item lädt die ausgerüstete Waffe | `{uuid, rounds, ammoLoaded}` |
 | `combat.shot` | Schuss-Batch (client-gemeldet, server-geklemmt auf geladene Munition) | `{uuid, item, serialNumber, shots, ammoRemaining}` — erhöht shots_fired der Instanz (Ballistik für /serialcheck) |
 
+### state.* (implementiert — Staatskasse)
+| Typ | Trigger | Payload |
+|---|---|---|
+| `state.treasury` | Jede Kassenbewegung: Bußgeld/Kauf/Steuer rein, Staatslohn raus | `{direction:'credit'\|'debit', amount, reason, balanceAfter}` — leere Kasse blockiert Löhne (job.payroll_failed) |
+
 ### craft.* (implementiert)
 | Typ | Trigger | Payload |
 |---|---|---|

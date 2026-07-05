@@ -92,6 +92,8 @@ Core:RegisterSecureEvent('hrp:vehicles:buy', {
         return reply(src, false, 'Zulassung fehlgeschlagen.')
     end
 
+    Core:TreasuryCredit(modelRow.base_price, 'vehicle.buy', { correlationId = correlationId })
+
     local vehicleId = Db.insert([[
         INSERT INTO vehicles (plate, model_id, owner_id, fuel_liters, garage)
         VALUES (?, ?, ?, ?, 'legion')

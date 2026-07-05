@@ -291,6 +291,37 @@ export class AcpService {
   }
 
   // -------------------------------------------------------------------------
+  // Wirtschafts-Dashboard: Staatskasse + Geldmengen-Bilanz
+  // -------------------------------------------------------------------------
+
+  async economyDashboard(): Promise<Record<string, unknown>> {
+    const [treasury] = await this.db.query<RowDataPacket[]>(
+      'SELECT balance, updated_at FROM state_treasury WHERE id = 1');
+    const [playerMoney] = await this.db.query<RowDataPacket[]>(
+      'SELECT COALESCE(SUM(cash),0) AS cash, COALESCE(SUM(bank),0) AS bank FROM character_money');
+    const [companyMoney] = await this.db.query<RowDataPacket[]>(
+      'SELECT COALESCE(SUM(balance),0) AS total FROM company_funds');
+
+    const flow = await this.logstore.query(
+      `SELECT day, type, reason, total_amount, events FROM money_flow_daily
+       WHERE day > now() - interval '14 days' ORDER BY day DESC, total_amount DESC`);
+    const treasuryEvents = await this.logstore.query(
+      `SELECT time, payload FROM events WHERE type = 'state.treasury'
+       ORDER BY time DESC LIMIT 50`);
+
+    return {
+      treasury: treasury[0] ?? null,
+      moneySupply: {
+        playerCash: Number(playerMoney[0]?.cash ?? 0),
+        playerBank: Number(playerMoney[0]?.bank ?? 0),
+        companyFunds: Number(companyMoney[0]?.total ?? 0),
+      },
+      flowDaily: flow.rows,
+      treasuryEvents: treasuryEvents.rows,
+    };
+  }
+
+  // -------------------------------------------------------------------------
   // Live-Tuning (schreibt Spiel-DB; Gameserver pollt den Stand periodisch)
   // -------------------------------------------------------------------------
 

@@ -126,11 +126,25 @@ CreateThread(function()
                 if job and job.on_duty == 1 and (job.salary or 0) > 0 then
                     local amount = math.floor(job.salary * multiplier)
                     if amount > 0 then
-                        Core:MoneyCreate(ident.characterId, 'bank', amount, 'state.salary', { correlationId = correlationId })
-                        paidCount = paidCount + 1
-                        TriggerClientEvent('chat:addMessage', src, {
-                            args = { '^2LOHN', ('Gehalt eingegangen: %s $'):format(string.format('%.2f', amount / 100)) },
-                        })
+                        -- Löhne koppeln an die Staatskasse: leere Kasse = kein Lohn
+                        local funded, err = Core:TreasuryDebit(amount, 'state.salary', { correlationId = correlationId })
+                        if funded then
+                            Core:MoneyCreate(ident.characterId, 'bank', amount, 'state.salary', { correlationId = correlationId })
+                            paidCount = paidCount + 1
+                            TriggerClientEvent('chat:addMessage', src, {
+                                args = { '^2LOHN', ('Gehalt eingegangen: %s $'):format(string.format('%.2f', amount / 100)) },
+                            })
+                        else
+                            Logger:Log('job.payroll_failed', {
+                                target = { kind = 'character', id = tostring(ident.characterId) },
+                                correlationId = correlationId,
+                                payload = { characterId = ident.characterId, job = job.name,
+                                            salary = amount, error = err },
+                            })
+                            TriggerClientEvent('chat:addMessage', src, {
+                                args = { '^1LOHN', 'Die Staatskasse ist leer — kein Gehalt. Die Regierung muss Einnahmen beschaffen.' },
+                            })
+                        end
                     end
                 end
             end

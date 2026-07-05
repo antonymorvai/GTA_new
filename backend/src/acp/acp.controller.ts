@@ -120,6 +120,14 @@ export class AcpController {
     return this.acp.playerFile(Number(accountId));
   }
 
+  // --- Wirtschafts-Dashboard ---
+  @Get('economy')
+  @RequirePermission('acp.logs.view')
+  async economy(@Req() req: AuthedRequest): Promise<unknown> {
+    this.access(req, 'economy');
+    return this.acp.economyDashboard();
+  }
+
   // --- Live-Tuning ---
   @Get('tuning')
   @RequirePermission('acp.tuning.edit')
