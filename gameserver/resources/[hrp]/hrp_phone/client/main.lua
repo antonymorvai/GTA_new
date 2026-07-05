@@ -26,3 +26,25 @@ end, false)
 RegisterCommand('contacts', function()
     TriggerServerEvent('hrp:phone:contacts')
 end, false)
+
+RegisterCommand('tweet', function(_, args)
+    local body = table.concat(args, ' ')
+    if body == '' then
+        TriggerEvent('chat:addMessage', { args = { '^1HANDY', 'Nutzung: /tweet <text>' } })
+        return
+    end
+    TriggerServerEvent('hrp:phone:tweet', body)
+end, false)
+
+RegisterCommand('tweets', function() TriggerServerEvent('hrp:phone:tweets') end, false)
+
+RegisterCommand('anzeige', function(_, args)
+    local body = table.concat(args, ' ')
+    if body == '' then
+        TriggerEvent('chat:addMessage', { args = { '^1HANDY', 'Nutzung: /anzeige <text> (kostenpflichtig)' } })
+        return
+    end
+    TriggerServerEvent('hrp:phone:ad', body)
+end, false)
+
+RegisterCommand('anzeigen', function() TriggerServerEvent('hrp:phone:ads') end, false)

@@ -109,6 +109,96 @@ Core:RegisterSecureEvent('hrp:phone:addContact', {
     reply(src, true, ('Kontakt gespeichert: %s (%s)'):format(name, number))
 end)
 
+-- ---------------------------------------------------------------------------
+-- Twitter-Klon: öffentliche Posts unter IC-Handle, vollständig geloggt.
+-- ---------------------------------------------------------------------------
+
+Core:RegisterSecureEvent('hrp:phone:tweet', {
+    rate = 0.2, burst = 2,
+    schema = { { type = 'string', maxLen = 280 } },
+}, function(src, body)
+    local ident = Core:GetPlayerIdentity(src)
+    if not hasPhone(ident.characterId) then return reply(src, false, 'Du hast kein Handy.') end
+    body = body:gsub('^%s+', ''):gsub('%s+$', '')
+    if #body < 2 then return end
+
+    local char = Db.single('SELECT first_name, last_name FROM characters WHERE id = ?', { ident.characterId })
+    local handle = ('@%s_%s'):format(char.first_name, char.last_name):lower():gsub('[^%w_@]', '')
+
+    Db.insert('INSERT INTO tweets (character_id, handle, body) VALUES (?, ?, ?)',
+        { ident.characterId, handle, body })
+
+    Core:Log(src, 'comms.tweet', {
+        target = { kind = 'character', id = tostring(ident.characterId) },
+        payload = { handle = handle, body = body },
+    })
+
+    TriggerClientEvent('chat:addMessage', -1, {
+        args = { '^5🐦 ' .. handle, body },
+    })
+end)
+
+Core:RegisterSecureEvent('hrp:phone:tweets', { rate = 0.5, burst = 2 }, function(src)
+    local ident = Core:GetPlayerIdentity(src)
+    if not hasPhone(ident.characterId) then return reply(src, false, 'Du hast kein Handy.') end
+    local rows = Db.query('SELECT handle, body, created_at FROM tweets ORDER BY created_at DESC LIMIT 10') or {}
+    for i = #rows, 1, -1 do
+        reply(src, true, ('%s: %s'):format(rows[i].handle, rows[i].body))
+    end
+    if #rows == 0 then reply(src, true, 'Noch keine Tweets.') end
+end)
+
+-- ---------------------------------------------------------------------------
+-- Kleinanzeigen: kostenpflichtig (Senke!), 24 h Laufzeit, Kontakt = IC-Nummer.
+-- ---------------------------------------------------------------------------
+
+Core:RegisterSecureEvent('hrp:phone:ad', {
+    rate = 0.1, burst = 1,
+    schema = { { type = 'string', maxLen = 300 } },
+}, function(src, body)
+    local ident = Core:GetPlayerIdentity(src)
+    if not hasPhone(ident.characterId) then return reply(src, false, 'Du hast kein Handy.') end
+    body = body:gsub('^%s+', ''):gsub('%s+$', '')
+    if #body < 10 then return reply(src, false, 'Anzeige zu kurz (min. 10 Zeichen).') end
+
+    local number = getNumber(ident.characterId)
+    if not number then return end
+
+    local fee = Core:TuningGet('phone.classified_fee', 2500)   -- Cent
+    local paid, err = Core:MoneyDestroy(ident.characterId, 'cash', fee, 'fee.classified')
+    if not paid then
+        return reply(src, false, err == 'insufficient_funds'
+            and ('Anzeige kostet %s $ bar.'):format(string.format('%.2f', fee / 100))
+            or 'Zahlung fehlgeschlagen.')
+    end
+
+    Db.insert([[
+        INSERT INTO classifieds (character_id, phone_number, body, expires_at)
+        VALUES (?, ?, ?, DATE_ADD(NOW(3), INTERVAL 24 HOUR))
+    ]], { ident.characterId, number, body })
+
+    Core:Log(src, 'comms.ad', {
+        target = { kind = 'character', id = tostring(ident.characterId) },
+        payload = { phoneNumber = number, body = body, fee = fee },
+    })
+
+    TriggerClientEvent('chat:addMessage', -1, {
+        args = { '^3📢 ANZEIGE', ('%s (Kontakt: %s)'):format(body, number) },
+    })
+    reply(src, true, ('Anzeige geschaltet (%s $, 24 h Laufzeit).'):format(string.format('%.2f', fee / 100)))
+end)
+
+Core:RegisterSecureEvent('hrp:phone:ads', { rate = 0.5, burst = 2 }, function(src)
+    local ident = Core:GetPlayerIdentity(src)
+    if not hasPhone(ident.characterId) then return reply(src, false, 'Du hast kein Handy.') end
+    local rows = Db.query(
+        'SELECT phone_number, body FROM classifieds WHERE expires_at > NOW(3) ORDER BY created_at DESC LIMIT 15') or {}
+    for i = #rows, 1, -1 do
+        reply(src, true, ('%s — Kontakt: %s'):format(rows[i].body, rows[i].phone_number))
+    end
+    if #rows == 0 then reply(src, true, 'Keine aktiven Anzeigen.') end
+end)
+
 Core:RegisterSecureEvent('hrp:phone:contacts', { rate = 0.5, burst = 2 }, function(src)
     local ident = Core:GetPlayerIdentity(src)
     if not hasPhone(ident.characterId) then return reply(src, false, 'Du hast kein Handy.') end

@@ -251,11 +251,18 @@ end)
 -- ---------------------------------------------------------------------------
 
 Core:RegisterSecureEvent('hrp:vehicles:refuel', { rate = 0.5, burst = 2 }, function(src)
-    local atStation = false
-    for _, pos in ipairs(FUEL_STATIONS) do
-        if nearPos(src, pos, 15.0) then atStation = true break end
+    -- Station mit ECHTEM Bestand (hrp_logistics); Fallback: Koordinaten-Liste
+    local playerPos = GetEntityCoords(GetPlayerPed(src))
+    local station
+    local hasLogistics = pcall(function()
+        station = exports.hrp_logistics:StationNear(playerPos.x, playerPos.y, playerPos.z, 15.0)
+    end)
+    if not hasLogistics then
+        for _, pos in ipairs(FUEL_STATIONS) do
+            if nearPos(src, pos, 15.0) then station = { id = nil, stock = 999999 } break end
+        end
     end
-    if not atStation then return reply(src, false, 'Du bist an keiner Tankstelle.') end
+    if not station then return reply(src, false, 'Du bist an keiner Tankstelle.') end
 
     local ped = GetPlayerPed(src)
     local vehEntity = GetVehiclePedIsIn(ped, false)
@@ -266,6 +273,14 @@ Core:RegisterSecureEvent('hrp:vehicles:refuel', { rate = 0.5, burst = 2 }, funct
             local ident = Core:GetPlayerIdentity(src)
             local liters = math.max(0, state.tank - state.fuel)
             if liters < 1 then return reply(src, false, 'Der Tank ist voll.') end
+
+            -- Lieferketten-Realität: leere Station verkauft nichts
+            liters = math.min(liters, station.stock or 0)
+            if liters < 1 then
+                return reply(src, false, ('%s ist LEER — ein Trucker muss liefern (/stationen).')
+                    :format(station.label or 'Diese Tankstelle'))
+            end
+
             local pricePerLiter = Core:TuningGet('vehicles.fuel_price_per_liter', 180) -- Cent
             local cost = math.floor(liters * pricePerLiter)
 
@@ -275,13 +290,19 @@ Core:RegisterSecureEvent('hrp:vehicles:refuel', { rate = 0.5, burst = 2 }, funct
             end
 
             local before = state.fuel
-            state.fuel = state.tank
+            state.fuel = math.min(state.tank, state.fuel + liters)
             Db.update('UPDATE vehicles SET fuel_liters = ? WHERE id = ?', { state.fuel, state.vehicleId })
+
+            -- Stationsbestand abbuchen (Lieferketten-Kopplung)
+            if station.id then
+                pcall(function() exports.hrp_logistics:ConsumeStock(station.id, liters) end)
+            end
 
             Core:Log(src, 'vehicle.refuel', {
                 target = { kind = 'vehicle', id = tostring(state.vehicleId) },
                 payload = { vehicleId = state.vehicleId, plate = state.plate,
-                            liters = liters, cost = cost, fuelBefore = before, fuelAfter = state.fuel },
+                            liters = liters, cost = cost, fuelBefore = before, fuelAfter = state.fuel,
+                            stationId = station.id, station = station.label },
             })
             return reply(src, true, ('%.1f L getankt für %s $.'):format(liters, string.format('%.2f', cost / 100)))
         end

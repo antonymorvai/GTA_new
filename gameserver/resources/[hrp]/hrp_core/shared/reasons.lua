@@ -36,6 +36,8 @@ HRPReasons = {
         ['company.salary']    = true,   -- Transfer: Firmenkonto -> Mitarbeiter (Lohnlauf)
         ['loan.disbursement'] = true,   -- Quelle: Kredit-Auszahlung der Bank
         ['loan.repayment']    = true,   -- Senke: Kreditrate
+        ['logistics.payment'] = true,   -- Quelle: Liefervergütung (Kraftstoff etc.)
+        ['fee.classified']    = true,   -- Senke: Kleinanzeigen-Gebühr
     },
     item = {
         ['shop.buy']          = true,

@@ -64,6 +64,8 @@ Eigenes, modulares FiveM-Framework mit **totaler Nachverfolgbarkeit**
 | Jahreszeiten (Schnee im Winter, saisonale Ernteerträge) | ✅ |
 | Kredite mit Bonität aus echten Verhaltensdaten (Raten, Ausfall) | ✅ |
 | Blitzer mit automatischem Bußgeld-Workflow | ✅ |
+| Lieferketten: Tankstellen-Bestände + Trucker-Belieferung (leere Station = kein Sprit) | ✅ |
+| Twitter-Klon + Kleinanzeigen (IC-Handles, Gebühr, Volltext-Logging) | ✅ |
 
 ## Dokumentation
 

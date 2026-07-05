@@ -283,9 +283,17 @@ Wird vom Backend in die Tabelle `position_samples` entrollt → Bewegungs-Replay
 | `bank.loan_paid` / `bank.loan_defaulted` | Kredit getilgt / 24 Raten verpasst | `{loanId, remaining?}` |
 | `vehicle.speeding` | Blitzer ausgelöst → automatisches Bußgeld (justice.fine automated) | `{plate, cameraId, camera, kmh, limitKmh, fineId}` |
 
+### logistics.* / comms.tweet / comms.ad (implementiert)
+| Typ | Trigger | Payload |
+|---|---|---|
+| `logistics.load` | Trucker lädt Kraftstoff an der Raffinerie (Großhandels-Kauf korreliert) | `{liters, wholesaleCost}` |
+| `logistics.deliver` | Lieferung an Tankstelle (Vergütung korreliert) | `{stationId, station, liters, pay, stationStockAfter}` — Tanken zieht real vom Bestand (vehicle.refuel trägt stationId) |
+| `comms.tweet` | Öffentlicher Post unter IC-Handle | `{handle, body}` — Inhalt voll geloggt |
+| `comms.ad` | Kleinanzeige (kostenpflichtig, 24 h) | `{phoneNumber, body, fee}` |
+
 ### Reserviert für Folgephasen (Namespace fixiert, Schema folgt je Modul)
 `combat.kill_file` (aggregierte Kill-Akte) ·
-`vehicle.lock/unlock/tune/damage` · `comms.chat/call_meta/call_content/radio/tweet/ad`
+`vehicle.lock/unlock/tune/damage` · `comms.chat/call_meta/call_content/radio`
 
 ## 3. Zustellgarantie
 
