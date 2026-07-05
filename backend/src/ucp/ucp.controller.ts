@@ -40,7 +40,12 @@ export class UcpController {
     const [fines] = await this.db.query<RowDataPacket[]>(
       `SELECT id, law_code, amount, status, created_at FROM fines
        WHERE character_id = ? ORDER BY created_at DESC LIMIT 50`, [Number(id)]);
-    return { character: chars[0], skills, fines };
+    // Eigenes Strafregister (Transparenz: der Bürger sieht seine Akte)
+    const [records] = await this.db.query<RowDataPacket[]>(
+      `SELECT cr.law_code, l.title, cr.note, cr.created_at
+       FROM criminal_records cr LEFT JOIN laws l ON l.code = cr.law_code
+       WHERE cr.character_id = ? ORDER BY cr.created_at DESC LIMIT 50`, [Number(id)]);
+    return { character: chars[0], skills, fines, criminalRecords: records };
   }
 
   /** Kontoauszug: money.*-Events des eigenen Charakters aus dem Log-Store. */

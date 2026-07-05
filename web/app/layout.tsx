@@ -17,6 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               Hardcore<span className="text-accent">RP</span>
             </Link>
             <Link href="/regelwerk" className="hover:text-white">Regelwerk</Link>
+            <Link href="/zeitung" className="hover:text-white">Zeitung</Link>
             <span className="flex-1" />
             <Link href="/ucp" className="hover:text-white">UCP</Link>
             <Link href="/acp" className="hover:text-white">ACP</Link>

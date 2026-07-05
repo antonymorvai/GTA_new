@@ -228,6 +228,46 @@ exports('MoneyDestroy',  function(...) return HRP.Money.Destroy(...) end)
 exports('MoneyTransfer', function(...) return HRP.Money.Transfer(...) end)
 exports('MoneyGetBalance', function(...) return HRP.Money.GetBalance(...) end)
 
+-- ---------------------------------------------------------------------------
+-- VERMÖGENSSTEUER: täglich, nur oberhalb des Freibetrags, auch offline —
+-- wirkt der Vermögenskonzentration entgegen und speist die Staatskasse.
+-- ---------------------------------------------------------------------------
+
+CreateThread(function()
+    local lastRunDay = nil
+    while true do
+        Wait(600000)  -- alle 10 min prüfen, ausführen 1x täglich zur Stunde X
+        local hour = tonumber(os.date('%H'))
+        local today = os.date('%Y-%m-%d')
+        if hour == HRP.Tuning.Get('tax.wealth_hour', 4) and lastRunDay ~= today then
+            lastRunDay = today
+            local threshold = HRP.Tuning.Get('tax.wealth_threshold', 100000000)  -- 1 Mio $
+            local rate = HRP.Tuning.Get('tax.wealth_rate', 0.005)                -- 0,5 %/Tag
+
+            local rich = Db.query([[
+                SELECT character_id, cash + bank AS total, bank FROM character_money
+                WHERE cash + bank > ?
+            ]], { threshold }) or {}
+
+            for _, row in ipairs(rich) do
+                local tax = math.floor((row.total - threshold) * rate)
+                tax = math.min(tax, row.bank)   -- nur vom Konto, Bargeld bleibt (Anreiz: Bank meiden = Risiko)
+                if tax > 0 then
+                    local correlationId = exports.hrp_logger:NewCorrelationId()
+                    local ok = HRP.Money.Destroy(row.character_id, 'bank', tax, 'tax.wealth',
+                        { correlationId = correlationId })
+                    if ok then
+                        HRP.Treasury.Credit(tax, 'tax.wealth', { correlationId = correlationId })
+                    end
+                end
+            end
+            if #rich > 0 then
+                print(('[hrp_core] Vermögenssteuer: %d Charaktere veranlagt.'):format(#rich))
+            end
+        end
+    end
+end)
+
 -- Spieler-zu-Spieler-Bargeldübergabe (Beispiel eines abgesicherten Client-Events)
 HRP.RegisterSecureEvent('hrp:money:giveCash', {
     rate = 1, burst = 3,

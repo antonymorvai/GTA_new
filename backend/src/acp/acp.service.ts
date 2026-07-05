@@ -213,6 +213,18 @@ export class AcpService {
     };
   }
 
+  /** Aktivitäts-Heatmap: Positions-Dichte in 100-m-Zellen. */
+  async heatmap(hours: number): Promise<unknown[]> {
+    const result = await this.logstore.query(
+      `SELECT round(x / 100) * 100 AS gx, round(y / 100) * 100 AS gy, count(*) AS n
+       FROM position_samples
+       WHERE time > now() - ($1 || ' hours')::interval
+       GROUP BY 1, 2 HAVING count(*) > 5
+       ORDER BY n DESC LIMIT 2000`,
+      [String(Math.min(Math.max(hours, 1), 168))]);
+    return result.rows;
+  }
+
   /** Letzte bekannte Positionen aller aktiven Charaktere (Live-Karte, ~5 s Versatz). */
   async liveMap(): Promise<unknown[]> {
     const result = await this.logstore.query(

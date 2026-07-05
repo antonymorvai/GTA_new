@@ -25,12 +25,20 @@ export class AcpController {
     });
   }
 
-  // --- Log-Explorer ---
+  // --- Aktivitäts-Heatmap ---
+  @Get('heatmap')
+  @RequirePermission('acp.logs.view')
+  async heatmap(@Req() req: AuthedRequest, @Query('hours') hours?: string): Promise<unknown[]> {
+    this.access(req, 'heatmap', { hours });
+    return this.acp.heatmap(Number(hours ?? 24));
+  }
+
+  // --- Log-Explorer (format=csv für Export) ---
   @Get('logs')
   @RequirePermission('acp.logs.view')
-  async logs(@Req() req: AuthedRequest, @Query() q: Record<string, string>): Promise<unknown[]> {
+  async logs(@Req() req: AuthedRequest, @Query() q: Record<string, string>): Promise<unknown> {
     this.access(req, 'logs', { filters: q });
-    return this.acp.queryLogs({
+    const rows = (await this.acp.queryLogs({
       type: q.type, category: q.category,
       actorAccount: q.actorAccount ? Number(q.actorAccount) : undefined,
       actorCharacter: q.actorCharacter ? Number(q.actorCharacter) : undefined,
@@ -38,7 +46,17 @@ export class AcpController {
       correlationId: q.correlationId, text: q.text,
       from: q.from, to: q.to,
       limit: Number(q.limit ?? 100), offset: Number(q.offset ?? 0),
-    });
+    })) as Array<Record<string, unknown>>;
+
+    if (q.format === 'csv') {
+      const header = 'time;type;actor_account;actor_character;target_kind;target_id;correlation_id;payload';
+      const lines = rows.map((r) =>
+        [r.time, r.type, r.actor_account ?? '', r.actor_character ?? '',
+         r.target_kind ?? '', r.target_id ?? '', r.correlation_id ?? '',
+         JSON.stringify(r.payload).replace(/;/g, ',')].join(';'));
+      return [header, ...lines].join('\n');
+    }
+    return rows;
   }
 
   // --- Universal-Timeline ---

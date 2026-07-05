@@ -299,9 +299,20 @@ Wird vom Backend in die Tabelle `position_samples` entrollt → Bewegungs-Replay
 | `vehicle.claim` | Schadensregulierung (Vollkasko: Wiederherstellung + Selbstbeteiligung; Teilkasko: Auszahlung, Wrack eingezogen) | `{vehicleId, plate, tier, deductible?/payout?}` |
 | `vehicle.scrapped` | Verschrottung gegen Restwert | `{vehicleId, plate, scrapValue}` |
 
+### 20-Punkte-Sprint (implementiert)
+| Typ | Trigger | Payload |
+|---|---|---|
+| `door.access` (erweitert) | Einbruch: result `breached`/`breach_failed` mit Skill-Level | `{propertyId, result, characterId, skillLevel?}` |
+| `crime.fence` | Hehler-Verkauf (Waffen-SN = hohes Spuren-Risiko) | `{item, quantity, total, serialNumber?}` |
+| `comms.radio` | Funk: join/leave/denied/transmit (Text-Funk mit Inhalt) | `{action, frequency, body?, reason?}` |
+| `comms.article` | Zeitungs-Artikel publiziert | `{articleId, headline, bodyLength}` |
+| `vehicle.tune` | Tuning-Stufe verbaut (persistiert, Entity-State) | `{plate, mechanicCharacterId, stageBefore, stageAfter}` |
+| Vermögenssteuer | täglich über Freibetrag: money.destroy(tax.wealth) + state.treasury | — |
+| Geldtransport | director.event money_transport; Raub = money.create(heist.loot) + crime.trace | — |
+
 ### Reserviert für Folgephasen (Namespace fixiert, Schema folgt je Modul)
 `combat.kill_file` (aggregierte Kill-Akte) ·
-`vehicle.lock/unlock/tune/damage` · `comms.chat/call_meta/call_content/radio`
+`vehicle.lock/unlock/damage` · `comms.chat/call_meta/call_content`
 
 ## 3. Zustellgarantie
 

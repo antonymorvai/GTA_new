@@ -25,8 +25,37 @@ export class AnomalyService implements OnModuleInit {
     found += await this.ruleMoneyCreated();
     found += await this.ruleAdminGiveSpike();
     found += await this.ruleDrugVolume();
+    found += await this.ruleTransferRing();
     if (found > 0) this.logger.warn(`${found} neue Anomalie(n) in der Prüf-Queue`);
     return found;
+  }
+
+  /** R4: Transfer-Ring — Geld pendelt zwischen zwei Charakteren hin und her
+   *  (Geldwäsche-/Dupe-Indikator): A->B UND B->A jeweils über Schwellwert in 24 h. */
+  private async ruleTransferRing(): Promise<number> {
+    const threshold = Number(process.env.ANOMALY_RING_24H ?? 20000000); // 200k $ Cent
+    const result = await this.logstore.query(
+      `WITH pair_sums AS (
+         SELECT payload->'from'->>'characterId' AS a,
+                payload->'to'->>'characterId'   AS b,
+                sum((payload->>'amount')::bigint) AS total
+         FROM events
+         WHERE type = 'money.transfer' AND time > now() - interval '24 hours'
+           AND payload->'from'->>'characterId' IS NOT NULL
+           AND payload->'to'->>'characterId' IS NOT NULL
+         GROUP BY 1, 2
+       )
+       SELECT x.a, x.b, x.total AS ab_total, y.total AS ba_total
+       FROM pair_sums x JOIN pair_sums y ON x.a = y.b AND x.b = y.a
+       WHERE x.a < x.b AND x.total > $1 AND y.total > $1`,
+      [threshold]);
+    let n = 0;
+    for (const row of result.rows) {
+      n += await this.insert('transfer_ring', 'character', String(row.a),
+        { partner: Number(row.b), abTotal: Number(row.ab_total),
+          baTotal: Number(row.ba_total), threshold });
+    }
+    return n;
   }
 
   /** Dedup: gleiche Regel + Subjekt nur 1x pro 24h offen. */

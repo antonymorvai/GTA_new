@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 const NAV = [
   { href: '/acp', label: 'Übersicht' },
   { href: '/acp/livemap', label: 'Live-Karte' },
+  { href: '/acp/heatmap', label: 'Heatmap' },
   { href: '/acp/players', label: 'Spieler' },
   { href: '/acp/applications', label: 'Bewerbungen' },
   { href: '/acp/tickets', label: 'Tickets' },

@@ -285,6 +285,24 @@ RegisterCommand('evlist', function(src, args)
     end
 end, false)
 
+-- /wanted — alle aktiven Fahndungen
+RegisterCommand('wanted', function(src)
+    if src == 0 then return end
+    local ident = officer(src)
+    if not ident then return reply(src, false, 'Nur Polizei im Dienst.') end
+    logMdtAccess(src, ident, 'wanted_list', nil, '*')
+
+    local rows = Db.query([[
+        SELECT w.id, w.reason, c.first_name, c.last_name FROM warrants w
+        JOIN characters c ON c.id = w.character_id
+        WHERE w.status = 'active' ORDER BY w.created_at DESC LIMIT 20
+    ]]) or {}
+    if #rows == 0 then return reply(src, true, 'Keine aktiven Fahndungen.') end
+    for _, w in ipairs(rows) do
+        reply(src, false, ('FAHNDUNG #%d: %s %s — %s'):format(w.id, w.first_name, w.last_name, w.reason))
+    end
+end, false)
+
 -- /serialcheck <seriennummer> — Waffenabfrage über das Seriennummern-System
 RegisterCommand('serialcheck', function(src, args)
     if src == 0 then return end

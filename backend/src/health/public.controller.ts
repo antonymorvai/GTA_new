@@ -9,6 +9,16 @@ export class PublicController {
 
   constructor(@Inject(GAMEDB) private readonly db: GameDb) {}
 
+  /** Zeitung: die letzten Artikel (öffentlich — Auflage = Reichweite). */
+  @Get('news')
+  async news(): Promise<unknown[]> {
+    const [rows] = await this.db.query<RowDataPacket[]>(
+      `SELECT a.id, a.headline, a.body, a.published_at, c.first_name, c.last_name
+       FROM news_articles a JOIN characters c ON c.id = a.author_id
+       ORDER BY a.published_at DESC LIMIT 20`);
+    return rows;
+  }
+
   @Get('status')
   async status(): Promise<unknown> {
     // 10-s-Cache: die Homepage darf die DB nicht fluten

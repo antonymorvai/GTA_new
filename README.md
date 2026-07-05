@@ -67,6 +67,10 @@ Eigenes, modulares FiveM-Framework mit **totaler Nachverfolgbarkeit**
 | Lieferketten: Tankstellen-Bestände + Trucker-Belieferung (leere Station = kein Sprit) | ✅ |
 | Twitter-Klon + Kleinanzeigen (IC-Handles, Gebühr, Volltext-Logging) | ✅ |
 | KFZ-Versicherung + Totalschaden (Vollkasko/Teilkasko/Haftpflicht, Prämien-Einzug, /claim, /scrap) | ✅ |
+| 20-Punkte-Sprint: Einbruch, Immobilien-Lager, Kofferraum, Hehler, Drop-Despawn, Übergewicht, Klinikkosten | ✅ |
+| 20-Punkte-Sprint: Funk (SaltyChat-Brücke, Staatskanäle), Tuning, Ausdauer, Geldtransport-Raub, HUD-Uhr, /help | ✅ |
+| 20-Punkte-Sprint: Vermögenssteuer, /wanted, Zeitung (in-game + Web), Anomalie-Regel Transfer-Ring | ✅ |
+| 20-Punkte-Sprint: UCP-Strafregister, ACP-Heatmap, Log-CSV-Export | ✅ |
 
 ## Dokumentation
 
