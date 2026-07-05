@@ -12,6 +12,7 @@ dependencies {
 server_scripts {
     '@oxmysql/lib/MySQL.lua',
     'server/main.lua',
+    'server/insurance.lua',
 }
 
 client_scripts {

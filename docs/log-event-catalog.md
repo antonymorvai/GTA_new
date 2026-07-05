@@ -291,6 +291,14 @@ Wird vom Backend in die Tabelle `position_samples` entrollt → Bewegungs-Replay
 | `comms.tweet` | Öffentlicher Post unter IC-Handle | `{handle, body}` — Inhalt voll geloggt |
 | `comms.ad` | Kleinanzeige (kostenpflichtig, 24 h) | `{phoneNumber, body, fee}` |
 
+### vehicle.total_loss / insurance (implementiert)
+| Typ | Trigger | Payload |
+|---|---|---|
+| `vehicle.total_loss` | Fahrzeug zerstört (server-erkannt, kein Auto-Heal) | `{vehicleId, plate, pos, mileageKm}` |
+| `vehicle.insured` / `vehicle.insurance_lapsed` | Police abgeschlossen / Prämie geplatzt | `{vehicleId, plate, tier?, premium, periodHours?}` |
+| `vehicle.claim` | Schadensregulierung (Vollkasko: Wiederherstellung + Selbstbeteiligung; Teilkasko: Auszahlung, Wrack eingezogen) | `{vehicleId, plate, tier, deductible?/payout?}` |
+| `vehicle.scrapped` | Verschrottung gegen Restwert | `{vehicleId, plate, scrapValue}` |
+
 ### Reserviert für Folgephasen (Namespace fixiert, Schema folgt je Modul)
 `combat.kill_file` (aggregierte Kill-Akte) ·
 `vehicle.lock/unlock/tune/damage` · `comms.chat/call_meta/call_content/radio`

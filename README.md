@@ -66,6 +66,7 @@ Eigenes, modulares FiveM-Framework mit **totaler Nachverfolgbarkeit**
 | Blitzer mit automatischem Bußgeld-Workflow | ✅ |
 | Lieferketten: Tankstellen-Bestände + Trucker-Belieferung (leere Station = kein Sprit) | ✅ |
 | Twitter-Klon + Kleinanzeigen (IC-Handles, Gebühr, Volltext-Logging) | ✅ |
+| KFZ-Versicherung + Totalschaden (Vollkasko/Teilkasko/Haftpflicht, Prämien-Einzug, /claim, /scrap) | ✅ |
 
 ## Dokumentation
 

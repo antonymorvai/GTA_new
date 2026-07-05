@@ -38,6 +38,9 @@ HRPReasons = {
         ['loan.repayment']    = true,   -- Senke: Kreditrate
         ['logistics.payment'] = true,   -- Quelle: Liefervergütung (Kraftstoff etc.)
         ['fee.classified']    = true,   -- Senke: Kleinanzeigen-Gebühr
+        ['insurance.premium'] = true,   -- Senke: Versicherungsprämie
+        ['insurance.payout']  = true,   -- Quelle: Versicherungsleistung
+        ['insurance.deductible'] = true, -- Senke: Selbstbeteiligung Vollkasko
     },
     item = {
         ['shop.buy']          = true,

@@ -138,6 +138,9 @@ Core:RegisterSecureEvent('hrp:vehicles:garageOut', {
     ]], { plate })
     if not veh then return reply(src, false, 'Unbekanntes Kennzeichen.') end
     if not hasKey(ident.characterId, veh) then return reply(src, false, 'Du hast keinen Schlüssel für dieses Fahrzeug.') end
+    if veh.status == 'totaled' then
+        return reply(src, false, 'TOTALSCHADEN — reguliere über /claim (Versicherung) oder /scrap (Restwert).')
+    end
     if veh.stored ~= 1 then return reply(src, false, 'Das Fahrzeug ist nicht in der Garage.') end
     if byPlate[veh.plate] then return reply(src, false, 'Das Fahrzeug ist bereits draußen.') end
 
@@ -336,6 +339,33 @@ end)
 CreateThread(function()
     while true do
         Wait(10000)
+        -- Totalschaden-Erkennung: zerstörte Fahrzeuge sind SCHROTT (kein Auto-Heal)
+        local totaled = {}
+        for id, state in pairs(active) do
+            if DoesEntityExist(state.entity) and IsEntityDead(state.entity) then
+                totaled[#totaled + 1] = { id = id, state = state }
+            end
+        end
+        for _, entry in ipairs(totaled) do
+            local state = entry.state
+            local c = GetEntityCoords(state.entity)
+            Db.update([[
+                UPDATE vehicles SET status = 'totaled', stored = 1, fuel_liters = ?,
+                       mileage_km = ?, engine_health = 0, body_health = 0, position = NULL
+                WHERE id = ?
+            ]], { state.fuel, state.mileage, state.vehicleId })
+            exports.hrp_logger:Log('vehicle.total_loss', {
+                target = { kind = 'vehicle', id = tostring(state.vehicleId) },
+                payload = { vehicleId = state.vehicleId, plate = state.plate,
+                            pos = { x = c.x, y = c.y, z = c.z }, mileageKm = state.mileage },
+            })
+            SetTimeout(30000, function()
+                if DoesEntityExist(state.entity) then DeleteEntity(state.entity) end
+            end)
+            active[entry.id] = nil
+            byPlate[state.plate] = nil
+        end
+
         for _, state in pairs(active) do
             if DoesEntityExist(state.entity) then
                 local coords = GetEntityCoords(state.entity)
