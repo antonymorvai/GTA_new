@@ -74,6 +74,7 @@ Eigenes, modulares FiveM-Framework mit **totaler Nachverfolgbarkeit**
 
 ## Dokumentation
 
+- **[🗺 Die vollständige Roadmap](docs/roadmap.md)** — der Nordstern: Design-Verfassung, Community-Erkenntnisse, alle geplanten Features in 3 Horizonten
 - [Architektur & Plattform-Entscheidung (FiveM)](docs/architecture.md)
 - [Log-Event-Katalog v1](docs/log-event-catalog.md) — der Vertrag aller Module
 - [Installation von Null bis Live](docs/installation.md)
