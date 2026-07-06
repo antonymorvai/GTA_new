@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Dezenter Prompt am Fadenkreuz -->
+    <div id="prompt" class="hidden">
+        <span class="key">E</span>
+        <span id="prompt-label">Interagieren</span>
+    </div>
+
+    <!-- Options-Menü -->
+    <div id="menu" class="hidden">
+        <div class="menu-head" id="menu-title">Kontext</div>
+        <div id="menu-options"></div>
+        <div class="menu-hint">↑↓ wählen · Enter bestätigen · Esc abbrechen</div>
+    </div>
+
+    <!-- Betrags-Dialog -->
+    <div id="amount" class="hidden">
+        <div class="amount-box">
+            <label id="amount-title">Betrag</label>
+            <input id="amount-input" type="number" min="1" placeholder="0" autofocus>
+            <div class="amount-actions">
+                <button id="amount-ok">OK</button>
+                <button id="amount-cancel">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

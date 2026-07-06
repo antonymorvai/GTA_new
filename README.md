@@ -71,6 +71,8 @@ Eigenes, modulares FiveM-Framework mit **totaler Nachverfolgbarkeit**
 | 20-Punkte-Sprint: Funk (SaltyChat-Brücke, Staatskanäle), Tuning, Ausdauer, Geldtransport-Raub, HUD-Uhr, /help | ✅ |
 | 20-Punkte-Sprint: Vermögenssteuer, /wanted, Zeitung (in-game + Web), Anomalie-Regel Transfer-Ring | ✅ |
 | 20-Punkte-Sprint: UCP-Strafregister, ACP-Heatmap, Log-CSV-Export | ✅ |
+| H1: Diminishing Returns (Anti-Grind), Fingerabdruck-Forensik, Cuff/Durchsuchung | ✅ |
+| H1: Smartphone 2.0 NUI, HUD 2.0 (Ringe/Status-Chips), Interact-System ([E]) | ✅ |
 
 ## Dokumentation
 

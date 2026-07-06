@@ -6,14 +6,26 @@
 </head>
 <body>
     <div id="clock">09:00</div>
-    <div id="hud">
-        <div class="bar-row" id="row-health"><span class="icon">❤</span><div class="bar"><div class="fill health" id="bar-health"></div></div></div>
-        <div class="bar-row" id="row-armor"><span class="icon">🛡</span><div class="bar"><div class="fill armor" id="bar-armor"></div></div></div>
-        <div class="bar-row" id="row-hunger"><span class="icon">🍞</span><div class="bar"><div class="fill hunger" id="bar-hunger"></div></div></div>
-        <div class="bar-row" id="row-thirst"><span class="icon">💧</span><div class="bar"><div class="fill thirst" id="bar-thirst"></div></div></div>
-        <div class="bar-row hidden" id="row-fuel"><span class="icon">⛽</span><div class="bar"><div class="fill fuel" id="bar-fuel"></div></div></div>
-        <div id="speed" class="hidden">0 <small>km/h</small></div>
+
+    <!-- Statuseffekt-Icons (oben rechts unter der Uhr) -->
+    <div id="status-icons"></div>
+
+    <!-- Vitals als Ringe (unten links) -->
+    <div id="rings">
+        <div class="ring" id="ring-health"><svg viewBox="0 0 44 44"><circle class="bg" cx="22" cy="22" r="19"/><circle class="fg" cx="22" cy="22" r="19"/></svg><span class="ico">❤</span></div>
+        <div class="ring" id="ring-armor"><svg viewBox="0 0 44 44"><circle class="bg" cx="22" cy="22" r="19"/><circle class="fg" cx="22" cy="22" r="19"/></svg><span class="ico">🛡</span></div>
+        <div class="ring" id="ring-hunger"><svg viewBox="0 0 44 44"><circle class="bg" cx="22" cy="22" r="19"/><circle class="fg" cx="22" cy="22" r="19"/></svg><span class="ico">🍞</span></div>
+        <div class="ring" id="ring-thirst"><svg viewBox="0 0 44 44"><circle class="bg" cx="22" cy="22" r="19"/><circle class="fg" cx="22" cy="22" r="19"/></svg><span class="ico">💧</span></div>
+        <div class="ring" id="ring-stress"><svg viewBox="0 0 44 44"><circle class="bg" cx="22" cy="22" r="19"/><circle class="fg" cx="22" cy="22" r="19"/></svg><span class="ico">🧠</span></div>
+        <div class="ring mic" id="ring-voice"><span class="ico">🎙</span></div>
     </div>
+
+    <!-- Fahrzeug-Panel (unten rechts) -->
+    <div id="vehicle" class="hidden">
+        <div id="speed">0<small>km/h</small></div>
+        <div class="ring vfuel" id="ring-fuel"><svg viewBox="0 0 44 44"><circle class="bg" cx="22" cy="22" r="19"/><circle class="fg" cx="22" cy="22" r="19"/></svg><span class="ico">⛽</span></div>
+    </div>
+
     <script src="app.js"></script>
 </body>
 </html>

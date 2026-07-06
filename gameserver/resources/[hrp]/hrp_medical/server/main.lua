@@ -353,10 +353,10 @@ CreateThread(function()
                     WHERE character_id = ?
                 ]], { hungerRate, thirstRate, ident.characterId })
 
-                local vitals = Db.single('SELECT hunger, thirst FROM character_vitals WHERE character_id = ?',
+                local vitals = Db.single('SELECT hunger, thirst, stress FROM character_vitals WHERE character_id = ?',
                     { ident.characterId })
                 if vitals then
-                    TriggerClientEvent('hrp:medical:vitals', src, vitals.hunger, vitals.thirst)
+                    TriggerClientEvent('hrp:medical:vitals', src, vitals.hunger, vitals.thirst, vitals.stress)
                     if vitals.hunger == 0 or vitals.thirst == 0 then
                         TriggerClientEvent('hrp:medical:starving', src)
                     end
@@ -369,9 +369,9 @@ end)
 -- HUD fragt Vitals beim Start / nach Spawn ab
 Core:RegisterSecureEvent('hrp:medical:requestVitals', { rate = 0.5, burst = 3 }, function(src)
     local ident = Core:GetPlayerIdentity(src)
-    local v = Db.single('SELECT hunger, thirst FROM character_vitals WHERE character_id = ?', { ident.characterId })
+    local v = Db.single('SELECT hunger, thirst, stress FROM character_vitals WHERE character_id = ?', { ident.characterId })
     if v then
-        TriggerClientEvent('hrp:medical:vitals', src, v.hunger, v.thirst)
+        TriggerClientEvent('hrp:medical:vitals', src, v.hunger, v.thirst, v.stress)
     end
 end)
 

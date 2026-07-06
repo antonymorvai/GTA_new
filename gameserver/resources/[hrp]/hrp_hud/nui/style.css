@@ -1,37 +1,74 @@
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+/* HUD 2.0 — Ringe, Statuseffekte, Nebula-Design */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', 'Inter', sans-serif; }
 body { background: transparent; overflow: hidden; }
 .hidden { display: none !important; }
 
 #clock {
-    position: fixed; top: 14px; right: 18px;
-    color: #fff; font-size: 15px; font-weight: 600;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    position: fixed; top: 14px; right: 20px;
+    color: #fff; font-size: 15px; font-weight: 600; letter-spacing: 0.5px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.9);
 }
 
-#hud {
+/* Statuseffekt-Icons */
+#status-icons {
+    position: fixed; top: 40px; right: 20px;
+    display: flex; flex-direction: column; gap: 6px; align-items: flex-end;
+}
+.status-chip {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(10,14,22,0.82); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px; padding: 4px 10px 4px 8px; font-size: 11px; color: #e5e7eb;
+    animation: chipIn 0.18s ease-out;
+}
+.status-chip .dot { width: 8px; height: 8px; border-radius: 50%; }
+.status-chip.danger { border-color: rgba(239,68,68,0.5); }
+.status-chip.danger .dot { background: #ef4444; animation: pulse 1s infinite; }
+.status-chip.warn .dot { background: #f59e0b; }
+.status-chip.info .dot { background: #4f8cff; }
+@keyframes chipIn { from { transform: translateX(12px); opacity: 0; } }
+@keyframes pulse { 50% { opacity: 0.35; } }
+
+/* Vitals-Ringe unten links */
+#rings {
     position: fixed; left: 18px; bottom: 18px;
-    width: 190px; display: flex; flex-direction: column; gap: 5px;
+    display: flex; gap: 8px; align-items: center;
+    transition: opacity 0.4s ease;
 }
-
-.bar-row { display: flex; align-items: center; gap: 6px; }
-.icon { font-size: 11px; width: 16px; text-align: center; filter: grayscale(0.2); }
-
-.bar {
-    flex: 1; height: 7px; border-radius: 4px;
-    background: rgba(0,0,0,0.55); overflow: hidden;
+.ring {
+    position: relative; width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.3s ease, transform 0.3s ease;
 }
-.fill { height: 100%; border-radius: 4px; transition: width 0.3s ease; }
-.fill.health { background: #ef4444; }
-.fill.armor  { background: #60a5fa; }
-.fill.hunger { background: #f59e0b; }
-.fill.thirst { background: #38bdf8; }
-.fill.fuel   { background: #a3e635; }
-
-.fill.low { animation: pulse 1s infinite; }
-@keyframes pulse { 50% { opacity: 0.4; } }
-
-#speed {
-    margin-top: 4px; color: #fff; font-size: 20px; font-weight: 700;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+.ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+.ring circle { fill: none; stroke-width: 3.5; }
+.ring circle.bg { stroke: rgba(0,0,0,0.55); }
+.ring circle.fg {
+    stroke-dasharray: 119.4; stroke-dashoffset: 0;
+    stroke-linecap: round; transition: stroke-dashoffset 0.4s ease, stroke 0.3s;
 }
-#speed small { font-size: 10px; font-weight: 400; color: #cbd5e1; }
+.ring .ico { font-size: 13px; z-index: 1; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.9)); }
+
+#ring-health circle.fg { stroke: #ef4444; }
+#ring-armor  circle.fg { stroke: #60a5fa; }
+#ring-hunger circle.fg { stroke: #f59e0b; }
+#ring-thirst circle.fg { stroke: #38bdf8; }
+#ring-stress circle.fg { stroke: #a78bfa; }
+.ring.low circle.fg { animation: pulse 1s infinite; }
+
+/* dezent: Ringe, die "voll & ok" sind, werden halbtransparent */
+.ring.calm { opacity: 0.35; }
+
+/* Mikrofon */
+.ring.mic { width: 32px; height: 32px; opacity: 0.3; transition: opacity 0.15s, transform 0.15s; }
+.ring.mic.active { opacity: 1; transform: scale(1.15); }
+.ring.mic.active .ico { filter: drop-shadow(0 0 6px #4ade80); }
+
+/* Fahrzeug-Panel */
+#vehicle {
+    position: fixed; right: 22px; bottom: 20px;
+    display: flex; align-items: center; gap: 12px;
+}
+#speed { color: #fff; font-size: 26px; font-weight: 700; text-shadow: 0 1px 4px rgba(0,0,0,0.9); }
+#speed small { font-size: 10px; font-weight: 400; color: #cbd5e1; margin-left: 3px; }
+.ring.vfuel circle.fg { stroke: #a3e635; }
+.ring.vfuel { width: 44px; height: 44px; }
