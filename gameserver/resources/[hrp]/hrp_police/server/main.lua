@@ -51,6 +51,127 @@ local function logMdtAccess(src, ident, view, targetCharacterId, query)
 end
 
 -- ---------------------------------------------------------------------------
+-- MDT-NUI-Endpunkte (strukturierte Daten statt Chat; jeder Zugriff geloggt)
+-- ---------------------------------------------------------------------------
+
+Core:RegisterSecureEvent('hrp:police:mdtOpen', { rate = 1, burst = 3 }, function(src)
+    local ident, job = officer(src)
+    if not ident then return reply(src, false, 'Nur Polizei im Dienst.') end
+    local officerChar = Db.single('SELECT first_name, last_name FROM characters WHERE id = ?', { ident.characterId })
+    TriggerClientEvent('hrp:police:mdtOpen', src, {
+        officer = ('%s %s'):format(officerChar.first_name, officerChar.last_name),
+        grade = job.grade,
+    })
+end)
+
+Core:RegisterSecureEvent('hrp:police:mdtPerson', {
+    rate = 2, burst = 5,
+    schema = { { type = 'string', maxLen = 64 } },
+}, function(src, query)
+    local ident = officer(src)
+    if not ident then return end
+    local first, last = query:match('^(%S+)%s+(%S+)$')
+    logMdtAccess(src, ident, 'person', nil, query)
+
+    -- Namens-Teilsuche (Vorname Nachname oder nur ein Teil)
+    local rows
+    if first and last then
+        rows = Db.query([[
+            SELECT id, first_name, last_name, date_of_birth, gender FROM characters
+            WHERE first_name = ? AND last_name = ? AND deleted_at IS NULL LIMIT 10
+        ]], { first, last })
+    else
+        rows = Db.query([[
+            SELECT id, first_name, last_name, date_of_birth, gender FROM characters
+            WHERE (first_name LIKE ? OR last_name LIKE ?) AND deleted_at IS NULL LIMIT 10
+        ]], { '%' .. query .. '%', '%' .. query .. '%' })
+    end
+
+    local results = {}
+    for _, char in ipairs(rows or {}) do
+        local warrants = Db.query("SELECT id, reason FROM warrants WHERE character_id = ? AND status = 'active'", { char.id }) or {}
+        local records = Db.query([[
+            SELECT cr.law_code, l.title, cr.created_at FROM criminal_records cr
+            LEFT JOIN laws l ON l.code = cr.law_code
+            WHERE cr.character_id = ? ORDER BY cr.created_at DESC LIMIT 15
+        ]], { char.id }) or {}
+        local openFines = Db.scalar("SELECT COALESCE(SUM(amount),0) FROM fines WHERE character_id = ? AND status = 'open'", { char.id })
+        local licenses = Db.query("SELECT number FROM phone_numbers WHERE character_id = ?", { char.id })
+        results[#results + 1] = {
+            id = char.id, firstName = char.first_name, lastName = char.last_name,
+            dob = tostring(char.date_of_birth):sub(1, 10), gender = char.gender,
+            phone = licenses and licenses[1] and licenses[1].number or nil,
+            warrants = warrants, records = records, openFines = openFines or 0,
+        }
+    end
+    TriggerClientEvent('hrp:police:mdtResult', src, 'person', results)
+end)
+
+Core:RegisterSecureEvent('hrp:police:mdtVehicle', {
+    rate = 2, burst = 5,
+    schema = { { type = 'string', maxLen = 8 } },
+}, function(src, plate)
+    local ident = officer(src)
+    if not ident then return end
+    plate = plate:upper()
+    logMdtAccess(src, ident, 'vehicle', nil, plate)
+    local veh = Db.single([[
+        SELECT v.plate, v.status, v.mileage_km, m.label, c.first_name, c.last_name, c.id AS owner_id
+        FROM vehicles v JOIN vehicle_models m ON m.id = v.model_id
+        JOIN characters c ON c.id = v.owner_id
+        WHERE v.plate = ? AND v.deleted_at IS NULL
+    ]], { plate })
+    local insurance = veh and Db.single("SELECT tier FROM vehicle_insurance WHERE vehicle_id = (SELECT id FROM vehicles WHERE plate = ?) AND active = 1", { plate })
+    TriggerClientEvent('hrp:police:mdtResult', src, 'vehicle', veh and {
+        plate = veh.plate, model = veh.label, status = veh.status,
+        mileage = math.floor(veh.mileage_km),
+        owner = veh.first_name .. ' ' .. veh.last_name, ownerId = veh.owner_id,
+        insurance = insurance and insurance.tier or 'keine',
+    } or nil)
+end)
+
+Core:RegisterSecureEvent('hrp:police:mdtWanted', { rate = 1, burst = 3 }, function(src)
+    local ident = officer(src)
+    if not ident then return end
+    logMdtAccess(src, ident, 'wanted_list', nil, '*')
+    local rows = Db.query([[
+        SELECT w.id, w.reason, w.created_at, c.first_name, c.last_name, c.id AS character_id
+        FROM warrants w JOIN characters c ON c.id = w.character_id
+        WHERE w.status = 'active' ORDER BY w.created_at DESC LIMIT 30
+    ]]) or {}
+    TriggerClientEvent('hrp:police:mdtResult', src, 'wanted', rows)
+end)
+
+Core:RegisterSecureEvent('hrp:police:mdtSerial', {
+    rate = 2, burst = 5,
+    schema = { { type = 'string', maxLen = 32 } },
+}, function(src, serial)
+    local ident = officer(src)
+    if not ident then return end
+    serial = serial:upper()
+    logMdtAccess(src, ident, 'weapon_serial', nil, serial)
+    local row = Db.single([[
+        SELECT i.uuid, i.shots_fired, i.created_at, d.label,
+               l.container_type, l.container_id
+        FROM item_instances i
+        JOIN item_definitions d ON d.id = i.definition_id
+        LEFT JOIN item_locations l ON l.instance_id = i.id
+        WHERE i.serial_number = ?
+    ]], { serial })
+    local ownerName
+    if row and row.container_type == 'character' then
+        local owner = Db.single('SELECT first_name, last_name FROM characters WHERE id = ?', { tonumber(row.container_id) })
+        ownerName = owner and (owner.first_name .. ' ' .. owner.last_name) or nil
+    end
+    TriggerClientEvent('hrp:police:mdtResult', src, 'serial', row and {
+        serial = serial, label = row.label, shotsFired = row.shots_fired,
+        registered = tostring(row.created_at):sub(1, 10),
+        location = row.container_type == 'character' and ('in Besitz: ' .. (ownerName or '?'))
+            or (row.container_type or 'unbekannt'),
+    } or nil)
+end)
+
+-- ---------------------------------------------------------------------------
 -- MDT: Personenakte / Fahrzeugabfrage
 -- ---------------------------------------------------------------------------
 

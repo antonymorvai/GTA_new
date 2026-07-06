@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="mdt" class="hidden">
+        <div class="tablet">
+            <aside class="sidebar">
+                <div class="brand">LSPD <span>MDT</span></div>
+                <nav>
+                    <button class="tab active" data-tab="person">👤 Personen</button>
+                    <button class="tab" data-tab="vehicle">🚗 Fahrzeuge</button>
+                    <button class="tab" data-tab="serial">🔫 Waffen</button>
+                    <button class="tab" data-tab="wanted">🚨 Fahndungen</button>
+                </nav>
+                <div class="officer" id="officer-info"></div>
+                <button class="close" id="mdt-close">Schließen (Esc)</button>
+            </aside>
+            <main class="content">
+                <div class="searchbar" id="searchbar">
+                    <input id="mdt-input" placeholder="Suche …">
+                    <button id="mdt-go">Abfragen</button>
+                </div>
+                <div id="mdt-results"></div>
+            </main>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

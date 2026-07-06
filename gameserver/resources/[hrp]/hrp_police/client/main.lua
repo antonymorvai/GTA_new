@@ -1,4 +1,37 @@
--- Polizei-Client: Handschellen-Zustand (Anim + Bewegungssperre).
+-- Polizei-Client: MDT-Tablet-NUI + Handschellen-Zustand.
+
+local mdtOpen = false
+
+local function closeMdt()
+    mdtOpen = false
+    SetNuiFocus(false, false)
+    SendNUIMessage({ action = 'mdtHide' })
+end
+
+RegisterCommand('mdt_tablet', function()
+    if mdtOpen then return closeMdt() end
+    TriggerServerEvent('hrp:police:mdtOpen')
+end, false)
+RegisterKeyMapping('mdt_tablet', 'MDT-Tablet öffnen', 'keyboard', 'F6')
+
+RegisterNetEvent('hrp:police:mdtOpen', function(info)
+    mdtOpen = true
+    SetNuiFocus(true, true)
+    SendNUIMessage({ action = 'mdtShow', info = info })
+end)
+
+RegisterNetEvent('hrp:police:mdtResult', function(kind, data)
+    if mdtOpen then SendNUIMessage({ action = 'mdtResult', kind = kind, data = data }) end
+end)
+
+RegisterNUICallback('mdtClose', function(_, cb) closeMdt() cb({}) end)
+RegisterNUICallback('mdtQuery', function(d, cb)
+    if d.kind == 'person' then TriggerServerEvent('hrp:police:mdtPerson', d.query)
+    elseif d.kind == 'vehicle' then TriggerServerEvent('hrp:police:mdtVehicle', d.query)
+    elseif d.kind == 'wanted' then TriggerServerEvent('hrp:police:mdtWanted')
+    elseif d.kind == 'serial' then TriggerServerEvent('hrp:police:mdtSerial', d.query) end
+    cb({})
+end)
 
 local isCuffed = false
 
