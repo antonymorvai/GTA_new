@@ -145,6 +145,25 @@ local function getInstance(uuid)
     ]], { uuid })
 end
 
+--- FORENSIK: Wer ein Item aus der Hand gibt, hinterlässt mit Wahrscheinlichkeit
+--- Fingerabdrücke in den Metadaten (max. 3, still — die Bewegung selbst ist das
+--- Event). Auswertung nur mit Spuren-Kit durch die Polizei.
+local function leavePrints(instanceId, characterId)
+    local chance = 0.8
+    pcall(function() chance = exports.hrp_core:TuningGet('inventory.print_chance', 0.8) end)
+    if math.random() >= chance then return end
+
+    local row = Db.single('SELECT metadata FROM item_instances WHERE id = ?', { instanceId })
+    local meta = row and row.metadata and json.decode(row.metadata) or {}
+    local prints = meta.prints or {}
+    if prints[#prints] ~= characterId then
+        prints[#prints + 1] = characterId
+        while #prints > 3 do table.remove(prints, 1) end
+    end
+    meta.prints = prints
+    Db.update('UPDATE item_instances SET metadata = ? WHERE id = ?', { json.encode(meta), instanceId })
+end
+
 --- Lagerbewegung (Inventar ↔ Kofferraum ↔ Boden ↔ Lager).
 function Inventory.Move(uuid, toContainer, opts)
     opts = opts or {}
@@ -175,6 +194,7 @@ function Inventory.Move(uuid, toContainer, opts)
     })
     -- Hook für Module mit Besitz-Bindung (z. B. hrp_weapons: Waffe entziehen)
     if inst.container_type == 'character' then
+        leavePrints(inst.id, tonumber(inst.container_id))
         TriggerEvent('hrp:inventory:instanceMoved', uuid)
     end
     return true

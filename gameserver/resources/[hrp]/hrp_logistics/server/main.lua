@@ -124,9 +124,11 @@ Core:RegisterSecureEvent('hrp:logistics:deliver', { rate = 0.3, burst = 2 }, fun
     cargo[src] = load - delivered
     Db.update('UPDATE fuel_stations SET stock_l = ? WHERE id = ?', { s.stock_l, station.id })
 
-    -- Liefervergütung: Marge über dem Großhandel
+    -- Liefervergütung: Marge über dem Großhandel + Tages-Sättigung
     local payPerLiter = Core:TuningGet('logistics.delivery_pay_per_liter', 130)   -- Cent
     local pay = delivered * payPerLiter
+    local factor
+    pay, factor = Core:EarningsApply(ident.characterId, 'logistics', pay)
     local correlationId = Logger:NewCorrelationId()
     Core:MoneyCreate(ident.characterId, 'bank', pay, 'logistics.payment', { correlationId = correlationId })
 

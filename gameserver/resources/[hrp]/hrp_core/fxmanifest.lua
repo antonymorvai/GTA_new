@@ -19,6 +19,7 @@ server_scripts {
     'server/db.lua',
     'server/main.lua',
     'server/tuning.lua',
+    'server/earnings.lua',
     'server/security.lua',
     'server/rbac.lua',
     'server/accounts.lua',

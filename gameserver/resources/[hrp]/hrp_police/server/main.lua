@@ -285,6 +285,113 @@ RegisterCommand('evlist', function(src, args)
     end
 end, false)
 
+-- ---------------------------------------------------------------------------
+-- Cuff / Durchsuchung / Beschlagnahme / Forensik
+-- ---------------------------------------------------------------------------
+
+local cuffed = {}   -- cuffed[targetSrc] = true
+
+RegisterCommand('cuff', function(src, args)
+    if src == 0 then return end
+    local ident = officer(src)
+    if not ident then return reply(src, false, 'Nur Polizei im Dienst.') end
+    local targetSrc = tonumber(args[1])
+    local target = targetSrc and Core:GetPlayerIdentity(targetSrc)
+    if not target then return reply(src, false, 'Spieler nicht gefunden.') end
+    if #(GetEntityCoords(GetPlayerPed(src)) - GetEntityCoords(GetPlayerPed(targetSrc))) > 3.0 then
+        return reply(src, false, 'Zu weit weg.')
+    end
+
+    cuffed[targetSrc] = not cuffed[targetSrc]
+    TriggerClientEvent('hrp:police:cuffed', targetSrc, cuffed[targetSrc])
+    Core:Log(src, 'police.cuff', {
+        target = { kind = 'character', id = tostring(target.characterId) },
+        payload = { targetCharacterId = target.characterId, cuffed = cuffed[targetSrc] == true,
+                    officerCharacterId = ident.characterId },
+    })
+    reply(src, true, cuffed[targetSrc] and 'Handschellen angelegt.' or 'Handschellen abgenommen.')
+end, false)
+
+-- /searchplayer <id> <rechtsgrundlage...> — Durchsuchung MIT Begründungspflicht
+RegisterCommand('searchplayer', function(src, args)
+    if src == 0 then return end
+    local ident = officer(src)
+    if not ident then return reply(src, false, 'Nur Polizei im Dienst.') end
+    local targetSrc = tonumber(args[1])
+    local basis = table.concat(args, ' ', 2)
+    local target = targetSrc and Core:GetPlayerIdentity(targetSrc)
+    if not target or not target.characterId then return reply(src, false, 'Spieler nicht gefunden.') end
+    if #basis < 5 then return reply(src, false, 'Rechtsgrundlage angeben: /searchplayer <id> <grund>') end
+    if #(GetEntityCoords(GetPlayerPed(src)) - GetEntityCoords(GetPlayerPed(targetSrc))) > 3.0 then
+        return reply(src, false, 'Zu weit weg.')
+    end
+
+    Core:Log(src, 'police.search', {
+        target = { kind = 'character', id = tostring(target.characterId) },
+        payload = { targetCharacterId = target.characterId, legalBasis = basis,
+                    officerCharacterId = ident.characterId },
+    })
+    local items = Inv:GetContainer('character', target.characterId) or {}
+    if #items == 0 then return reply(src, true, 'Keine Gegenstände gefunden.') end
+    for _, it in ipairs(items) do
+        reply(src, true, ('%s · %s x%d%s'):format(it.uuid:sub(1, 8), it.label, it.quantity,
+            it.serial_number and (' · SN ' .. it.serial_number) or ''))
+    end
+    reply(targetSrc, false, ('Du wirst durchsucht. Grund: %s'):format(basis))
+end, false)
+
+-- /confiscate <id> <item-uuid> <fallnummer> — direkt in die Beweismittelkette
+RegisterCommand('confiscate', function(src, args)
+    if src == 0 then return end
+    local ident = officer(src)
+    if not ident then return reply(src, false, 'Nur Polizei im Dienst.') end
+    local targetSrc, uuid, caseNumber = tonumber(args[1]), args[2], args[3]
+    local target = targetSrc and Core:GetPlayerIdentity(targetSrc)
+    if not target or not uuid or not caseNumber then
+        return reply(src, false, 'Nutzung: /confiscate <id> <item-uuid> <fallnummer>')
+    end
+    if not Db.scalar('SELECT 1 FROM evidence_cases WHERE case_number = ?', { caseNumber }) then
+        return reply(src, false, 'Unbekannte Fallnummer (/newcase).')
+    end
+
+    local ok, err = Inv:Move(uuid, { type = 'evidence', id = caseNumber }, { srcForLog = src })
+    if not ok then return reply(src, false, 'Beschlagnahme fehlgeschlagen: ' .. tostring(err)) end
+    logCustody(src, ident, caseNumber, uuid, 'stored', 'Beschlagnahme bei Durchsuchung')
+    reply(src, true, 'Beschlagnahmt und als Beweismittel eingelagert.')
+    reply(targetSrc, false, 'Ein Gegenstand wurde beschlagnahmt.')
+end, false)
+
+-- /inspectitem <item-uuid> — Fingerabdruck-Auswertung (Spuren-Kit nötig)
+RegisterCommand('inspectitem', function(src, args)
+    if src == 0 then return end
+    local ident = officer(src)
+    if not ident then return reply(src, false, 'Nur Polizei im Dienst.') end
+    local uuid = args[1]
+    if not uuid then return reply(src, false, 'Nutzung: /inspectitem <item-uuid>') end
+
+    local hasKit = false
+    for _, it in ipairs(Inv:GetContainer('character', ident.characterId) or {}) do
+        if it.name == 'evidence_kit' then hasKit = true break end
+    end
+    if not hasKit then return reply(src, false, 'Du brauchst ein Spuren-Kit.') end
+
+    local meta = Inv:GetInstanceMeta(uuid)
+    if not meta then return reply(src, false, 'Item nicht gefunden.') end
+    logMdtAccess(src, ident, 'forensics', nil, uuid)
+
+    local prints = meta.metadata.prints or {}
+    if #prints == 0 then return reply(src, true, 'Keine verwertbaren Abdrücke.') end
+    for _, charId in ipairs(prints) do
+        local person = Db.single('SELECT first_name, last_name FROM characters WHERE id = ?', { charId })
+        reply(src, true, ('Abdruck: %s'):format(person
+            and (person.first_name .. ' ' .. person.last_name) or ('Unbekannt (#' .. charId .. ')')))
+    end
+end, false)
+
+AddEventHandler('playerDropped', function()
+    cuffed[source] = nil
+end)
+
 -- /wanted — alle aktiven Fahndungen
 RegisterCommand('wanted', function(src)
     if src == 0 then return end

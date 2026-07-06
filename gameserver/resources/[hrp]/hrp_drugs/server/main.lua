@@ -138,6 +138,9 @@ Core:RegisterSecureEvent('hrp:drugs:sell', {
 
     local unitPrice = math.floor(basePrice * qualityFactor * territoryFactor * copFactor)
     local total = unitPrice * item.quantity
+    -- Anti-Grind: Tages-Sättigung auch für illegale Einnahmen
+    local fatigueFactor
+    total, fatigueFactor = Core:EarningsApply(ident.characterId, 'drug_sale', total)
     local correlationId = Logger:NewCorrelationId()
 
     local destroyed = Inv:Destroy(uuid, 'drug.sale', { correlationId = correlationId, srcForLog = src })
@@ -152,7 +155,8 @@ Core:RegisterSecureEvent('hrp:drugs:sell', {
             unitPrice = unitPrice, total = total, spotId = atSpot.id,
             territoryId = territory and territory.id or nil,
             copsOnDuty = cops,
-            factors = { quality = qualityFactor, territory = territoryFactor, cops = copFactor },
+            factors = { quality = qualityFactor, territory = territoryFactor,
+                        cops = copFactor, fatigue = fatigueFactor },
         },
     })
 

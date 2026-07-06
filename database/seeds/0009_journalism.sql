@@ -11,3 +11,8 @@ JOIN (
     SELECT 'journalist', 1, 'Redakteur', 0 UNION ALL
     SELECT 'journalist', 2, 'Chefredakteur', 0
 ) g ON g.job = j.name;
+
+-- Spuren-Kit für die Forensik (Ausgabe über Asservaten/Admin, kein Shop)
+INSERT INTO item_definitions (name, label, category, weight_grams, max_stack, is_unique, usable) VALUES
+    ('evidence_kit', 'Spuren-Kit', 'tool', 1500, 1, 0, 0)
+ON DUPLICATE KEY UPDATE label = VALUES(label);

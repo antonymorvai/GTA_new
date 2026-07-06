@@ -137,6 +137,9 @@ Core:RegisterSecureEvent('hrp:economy:sell', {
 
     local unitPrice = HRPPricing.SellToShopPrice(item.current_price, t.sellMargin)
     local total = unitPrice * instance.quantity
+    -- Anti-Grind: Tages-Sättigung (Design-Verfassung §0)
+    local factor
+    total, factor = Core:EarningsApply(ident.characterId, 'shop_sell', total)
     local correlationId = Logger:NewCorrelationId()
 
     -- 1) Item vernichten (Senke: Verkauf an System)
@@ -150,7 +153,9 @@ Core:RegisterSecureEvent('hrp:economy:sell', {
     item.stock = item.stock + instance.quantity
     Db.update('UPDATE shop_items SET stock = ? WHERE id = ?', { item.stock, item.id })
 
-    reply(true, ('%dx %s verkauft für %s $.'):format(instance.quantity, instance.label, string.format('%.2f', total / 100)))
+    reply(true, ('%dx %s verkauft für %s $%s.'):format(instance.quantity, instance.label,
+        string.format('%.2f', total / 100),
+        factor < 1 and (' · Tagesform %d %%'):format(factor * 100) or ''))
 end)
 
 -- Preisliste des nächsten Shops (für Client-UI / Tests)

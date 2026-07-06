@@ -310,6 +310,14 @@ Wird vom Backend in die Tabelle `position_samples` entrollt → Bewegungs-Replay
 | Vermögenssteuer | täglich über Freibetrag: money.destroy(tax.wealth) + state.treasury | — |
 | Geldtransport | director.event money_transport; Raub = money.create(heist.loot) + crime.trace | — |
 
+### H1-Sprint (implementiert)
+| Typ | Trigger | Payload |
+|---|---|---|
+| `police.cuff` | Handschellen an/ab | `{targetCharacterId, cuffed, officerCharacterId}` |
+| `police.search` | Durchsuchung MIT Rechtsgrundlage (Pflichtfeld) | `{targetCharacterId, legalBasis, officerCharacterId}` |
+| Forensik | Fingerabdrücke landen still in Item-Metadaten (die Bewegung ist das Event); Auswertung = `police.mdt_access` view `forensics` | — |
+| Diminishing Returns | Tages-Sättigung je Quelle; `drug.sale.factors.fatigue` etc. dokumentieren den Faktor | — |
+
 ### Reserviert für Folgephasen (Namespace fixiert, Schema folgt je Modul)
 `combat.kill_file` (aggregierte Kill-Akte) ·
 `vehicle.lock/unlock/damage` · `comms.chat/call_meta/call_content`
