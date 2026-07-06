@@ -110,6 +110,41 @@ Core:RegisterSecureEvent('hrp:phone:addContact', {
 end)
 
 -- ---------------------------------------------------------------------------
+-- Daten-Bundle fürs Smartphone-NUI (eine Abfrage, alle Apps).
+-- ---------------------------------------------------------------------------
+
+Core:RegisterSecureEvent('hrp:phone:data', { rate = 1, burst = 4 }, function(src)
+    local ident = Core:GetPlayerIdentity(src)
+    if not hasPhone(ident.characterId) then
+        TriggerClientEvent('hrp:phone:noPhone', src)
+        return
+    end
+    local myNumber = getNumber(ident.characterId)
+
+    local contacts = Db.query(
+        'SELECT name, number FROM phone_contacts WHERE character_id = ? ORDER BY name', { ident.characterId }) or {}
+    local messages = Db.query([[
+        SELECT from_number, to_number, body, sent_at FROM phone_messages
+        WHERE from_number = ? OR to_number = ?
+        ORDER BY sent_at DESC LIMIT 80
+    ]], { myNumber, myNumber }) or {}
+    local tweets = Db.query(
+        'SELECT handle, body, created_at FROM tweets ORDER BY created_at DESC LIMIT 25') or {}
+    local ads = Db.query(
+        'SELECT phone_number, body, created_at FROM classifieds WHERE expires_at > NOW(3) ORDER BY created_at DESC LIMIT 20') or {}
+
+    TriggerClientEvent('hrp:phone:dataResult', src, {
+        myNumber = myNumber,
+        contacts = contacts,
+        messages = messages,
+        tweets = tweets,
+        ads = ads,
+        cash = Core:MoneyGetBalance(ident.characterId, 'cash') or 0,
+        bank = Core:MoneyGetBalance(ident.characterId, 'bank') or 0,
+    })
+end)
+
+-- ---------------------------------------------------------------------------
 -- Twitter-Klon: öffentliche Posts unter IC-Handle, vollständig geloggt.
 -- ---------------------------------------------------------------------------
 

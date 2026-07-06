@@ -18,3 +18,11 @@ server_scripts {
 client_scripts {
     'client/main.lua',
 }
+
+ui_page 'nui/index.html'
+
+files {
+    'nui/index.html',
+    'nui/style.css',
+    'nui/app.js',
+}
