@@ -73,6 +73,7 @@ Eigenes, modulares FiveM-Framework mit **totaler Nachverfolgbarkeit**
 | 20-Punkte-Sprint: UCP-Strafregister, ACP-Heatmap, Log-CSV-Export | ✅ |
 | H1: Diminishing Returns (Anti-Grind), Fingerabdruck-Forensik, Cuff/Durchsuchung | ✅ |
 | H1: Smartphone 2.0 NUI, HUD 2.0 (Ringe/Status-Chips), Interact-System ([E]) | ✅ |
+| H1: Inventar 2.0 (Grid, Drag & Drop, Dual-Panel Kofferraum/Lager, Qualitäts-Balken) | ✅ |
 
 ## Dokumentation
 

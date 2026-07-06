@@ -240,11 +240,8 @@ Core:RegisterSecureEvent('hrp:properties:storage', {
     local containerId = 'property:' .. propId
 
     if action == 'list' then
-        local items = Inv:GetContainer('storage', containerId) or {}
-        if #items == 0 then return reply(src, true, 'Das Lager ist leer.') end
-        for _, it in ipairs(items) do
-            reply(src, true, ('%s · %s x%d'):format(it.uuid:sub(1, 8), it.label, it.quantity))
-        end
+        -- Inventar 2.0: öffnet das Grid-NUI mit dem Lager als Zweit-Container
+        Inv:OpenContainer(src, 'storage', containerId, 'Lager')
     elseif action == 'store' and uuid then
         local ok, err = Inv:Move(uuid, { type = 'storage', id = containerId }, { srcForLog = src })
         reply(src, ok == true, ok and 'Eingelagert.' or ('Fehlgeschlagen: ' .. tostring(err)))

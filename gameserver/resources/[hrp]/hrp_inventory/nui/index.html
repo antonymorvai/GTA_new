@@ -5,15 +5,35 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="inventory" class="hidden">
-        <div class="header">
-            <h1>Inventar</h1>
-            <span id="weight">0 / 30 kg</span>
-            <button id="btn-close">✕</button>
+    <div id="inv" class="hidden">
+        <div class="panels">
+            <!-- Eigenes Inventar -->
+            <section class="panel" id="panel-primary" data-side="primary">
+                <header>
+                    <h2>Inventar</h2>
+                    <div class="weight"><div class="weight-fill" id="weight-fill"></div></div>
+                    <span id="weight-text">0 / 30 kg</span>
+                </header>
+                <div class="grid" id="grid-primary"></div>
+            </section>
+
+            <!-- Zweit-Container (Kofferraum/Lager) -->
+            <section class="panel hidden" id="panel-secondary" data-side="secondary">
+                <header><h2 id="secondary-title">Container</h2></header>
+                <div class="grid" id="grid-secondary"></div>
+            </section>
         </div>
-        <div class="weight-bar"><div id="weight-fill"></div></div>
-        <div id="items"></div>
+
+        <div class="hint">Ziehen zum Verstauen · Doppelklick = Benutzen · Rechtsklick = Menü · Esc schließt</div>
     </div>
+
+    <!-- Kontextmenü für ein Item -->
+    <div id="ctx" class="hidden">
+        <div class="ctx-item" data-act="use">Benutzen</div>
+        <div class="ctx-item" data-act="give">Geben …</div>
+        <div class="ctx-item" data-act="drop">Ablegen</div>
+    </div>
+
     <script src="app.js"></script>
 </body>
 </html>
